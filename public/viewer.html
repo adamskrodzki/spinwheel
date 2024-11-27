@@ -104,7 +104,6 @@
       let spinStartTime = null;
       let spinDuration = 0;
       let totalAngle = 0;
-      let animationFrameId;
 
       // Handle spin events from the server
       socket.on('spin', (spinData) => {
@@ -113,6 +112,13 @@
         const { spins, duration, stopAngle, winningSegment } = spinData;
         spinDuration = duration * 1000; // Convert to milliseconds
         totalAngle = (spins * 2 * Math.PI) + (stopAngle * Math.PI / 180); // Total radians to spin
+
+        // Adjust totalAngle to prevent excessive rotations
+        // For example, limit to a maximum of 10 full spins
+        const maxSpins = 10;
+        if (spins > maxSpins) {
+          totalAngle = (maxSpins * 2 * Math.PI) + (stopAngle * Math.PI / 180);
+        }
 
         targetAngle = currentAngle + totalAngle;
 

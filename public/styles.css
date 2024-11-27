@@ -38,14 +38,14 @@ body {
   
   #pointer {
     position: absolute;
-    top: 20px; /* Adjust based on canvas size */
-    left: 50%;
-    transform: translateX(-50%);
+    top: 50%;
+    right: -30px; /* Position slightly outside the wheel */
+    transform: translateY(-50%);
     width: 0; 
     height: 0; 
-    border-left: 20px solid transparent;
-    border-right: 20px solid transparent;
-    border-bottom: 30px solid red;
+    border-top: 15px solid transparent;
+    border-bottom: 15px solid transparent;
+    border-left: 20px solid red; /* Triangle pointing inward */
     z-index: 10;
   }
   
