@@ -1,0 +1,59 @@
+/* public/styles.css */
+body {
+    text-align: center;
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .container {
+    width: 80%;
+    margin: auto;
+    padding: 20px;
+  }
+  
+  textarea {
+    width: 100%;
+    height: 150px;
+    padding: 10px;
+    font-size: 16px;
+    resize: vertical;
+  }
+  
+  button {
+    padding: 10px 20px;
+    font-size: 18px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  
+  #wheelCanvas {
+    margin-top: 20px;
+  }
+  
+  #pointer {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; 
+    height: 0; 
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+    border-bottom: 30px solid red;
+    z-index: 10;
+  }
+  
+  #canvas-container {
+    position: relative;
+    margin: auto;
+    width: 500px;
+    height: 500px;
+  }
+  
+  .error {
+    color: red;
+    margin-top: 10px;
+  }
+  

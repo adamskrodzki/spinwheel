@@ -1,0 +1,139 @@
+<!-- public/viewer.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>View Spin Wheel</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Collaborative Spin Wheel</h1>
+    <div id="canvas-container">
+      <div id="pointer"></div>
+      <canvas id="wheelCanvas" width="500" height="500"></canvas>
+    </div>
+    <button id="spinButton">Spin</button>
+    <p id="statusMessage" class="error"></p>
+  </div>
+
+  <!-- Include Socket.IO -->
+  <script src="/socket.io/socket.io.js"></script>
+  <!-- Include Winwheel.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Winwheel.js/2.8.0/Winwheel.min.js"></script>
+  <!-- Include GSAP for animation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/gsap.min.js"></script>
+
+  <script>
+    const socket = io();
+
+    // Extract wheelId from URL
+    const pathParts = window.location.pathname.split('/');
+    const wheelId = pathParts[pathParts.length - 1];
+
+    // Join the wheel room
+    socket.emit('joinWheel', wheelId);
+
+    // Handle errors
+    socket.on('error', (message) => {
+      document.getElementById('statusMessage').innerText = message;
+      document.getElementById('spinButton').disabled = true;
+    });
+
+    // Fetch wheel configuration
+    fetch(`/wheel-config/${wheelId}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          document.getElementById('statusMessage').innerText = data.error;
+        } else {
+          initializeWheel(data.segments);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('statusMessage').innerText = 'An error occurred while loading the wheel.';
+      });
+
+    // Function to initialize the wheel
+    let theWheel;
+    function initializeWheel(segments) {
+      // Define the segments for Winwheel.js
+      const winwheelSegments = segments.map(seg => ({
+        fillStyle: getRandomColor(),
+        text: seg
+      }));
+
+      theWheel = new Winwheel({
+        'canvasId': 'wheelCanvas',
+        'numSegments': winwheelSegments.length,
+        'segments': winwheelSegments,
+        'animation': {
+          'type': 'spinToStop',
+          'duration': 5,
+          'spins': 8,
+          'callbackFinished': alertPrize
+        }
+      });
+    }
+
+    // Function to generate random colors for segments
+    function getRandomColor() {
+      const letters = '0123456789ABCDEF';
+      let color = '#';
+      for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+      }
+      return color;
+    }
+
+    // Function to alert the prize
+    function alertPrize(indicatedSegment) {
+      alert("The wheel stopped at: " + indicatedSegment.text);
+    }
+
+    // Spin button click handler
+    document.getElementById('spinButton').addEventListener('click', () => {
+      // Emit a 'spin' event to request a spin
+      socket.emit('spin', { wheelId });
+      // Disable the spin button until the spin is finished
+      document.getElementById('spinButton').disabled = true;
+      document.getElementById('statusMessage').innerText = 'Spinning...';
+    });
+
+    // Listen for spin events from the server
+    socket.on('spin', (spinData) => {
+      console.log('Spin event received:', spinData);
+      performSpin(spinData);
+    });
+
+    // Listen for spinEnded events to re-enable the spin button
+    socket.on('spinEnded', (spinData) => {
+      document.getElementById('spinButton').disabled = false;
+      document.getElementById('statusMessage').innerText = '';
+    });
+
+    // Function to perform the spin based on received spin data
+    // viewer.html (excerpt)
+    function performSpin(spinData) {
+    if (theWheel) {
+        theWheel.animation = {
+        'type': 'spinToStop',
+        'duration': spinData.duration,
+        'spins': spinData.spins,
+        'stopAngle': spinData.stopAngle,
+        'callbackFinished': () => {
+            const segment = theWheel.getSegmentAtAngle(spinData.stopAngle);
+            alert("The wheel stopped at: " + segment.text);
+            // Re-enable the spin button after the spin finishes
+            document.getElementById('spinButton').disabled = false;
+            document.getElementById('statusMessage').innerText = '';
+        }
+        };
+        theWheel.startAnimation();
+    }
+    }
+
+  </script>
+</body>
+</html>
