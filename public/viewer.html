@@ -14,6 +14,7 @@
       <canvas id="wheelCanvas" width="500" height="500"></canvas>
     </div>
     <p id="statusMessage" class="error"></p>
+    <div id="winner" class="success"></div>
   </div>
 
   <!-- Include Socket.IO -->
@@ -41,7 +42,7 @@
         if (data.error) {
           document.getElementById('statusMessage').innerText = data.error;
         } else {
-          initializeWheel(data.segments);
+          initializeWheel(data.segments, data.colors);
         }
       })
       .catch(error => {
@@ -50,10 +51,8 @@
       });
 
     // Function to initialize the wheel
-    let theWheel;
     let spinning = false;
-
-    function initializeWheel(segments) {
+    function initializeWheel(segments, colors) {
       const canvas = document.getElementById('wheelCanvas');
       const ctx = canvas.getContext('2d');
       const centerX = canvas.width / 2;
@@ -62,14 +61,17 @@
       const numSegments = segments.length;
       const segmentAngle = 2 * Math.PI / numSegments;
 
-      // Assign random colors to each segment
-      const colors = segments.map(() => getRandomColor());
+      // Draw the wheel with an initial rotation to align 0 radians at the top
+      let currentAngle = 0;
 
-      // Draw the wheel
       function drawWheel(angleOffset = 0) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(angleOffset);
+        ctx.translate(-centerX, -centerY);
         for (let i = 0; i < numSegments; i++) {
-          const startAngle = i * segmentAngle + angleOffset;
+          const startAngle = i * segmentAngle;
           const endAngle = startAngle + segmentAngle;
 
           // Draw segment
@@ -87,21 +89,21 @@
           ctx.translate(centerX, centerY);
           ctx.rotate(startAngle + segmentAngle / 2);
           ctx.textAlign = 'right';
-          ctx.fillStyle = '#000';
-          ctx.font = '16px Arial';
+          ctx.fillStyle = '#FFFFFF'; // White text for contrast
+          ctx.font = '20px Arial'; // Bigger font
           ctx.fillText(segments[i], radius - 10, 10);
           ctx.restore();
         }
+        ctx.restore();
       }
 
       drawWheel();
 
       // Spin functionality
-      let currentAngle = 0;
       let targetAngle = 0;
       let spinStartTime = null;
       let spinDuration = 0;
-      let spinSpeed = 0;
+      let totalAngle = 0;
       let animationFrameId;
 
       // Handle spin events from the server
@@ -110,51 +112,65 @@
 
         const { spins, duration, stopAngle, winningSegment } = spinData;
         spinDuration = duration * 1000; // Convert to milliseconds
-        targetAngle = (spins * 2 * Math.PI) + (stopAngle * Math.PI / 180);
+        totalAngle = (spins * 2 * Math.PI) + (stopAngle * Math.PI / 180); // Total radians to spin
+
+        targetAngle = currentAngle + totalAngle;
 
         spinStartTime = null;
-        spinSpeed = targetAngle / spinDuration; // Radians per millisecond
         spinning = true;
+        document.getElementById('statusMessage').innerText = 'Spinning...';
+        document.getElementById('winner').innerText = '';
+
         animateSpin();
       });
 
       // Handle spinEnded events to reset spin state
       socket.on('spinEnded', (spinData) => {
         spinning = false;
+        document.getElementById('statusMessage').innerText = '';
       });
 
-      // Animate the spin
-      function animateSpin(timestamp) {
-        if (!spinStartTime) spinStartTime = timestamp;
-        const elapsed = timestamp - spinStartTime;
+      // Animate the spin using setInterval with smooth deceleration
+      function animateSpin() {
+        const startTime = Date.now();
+        const interval = 20; // milliseconds
 
-        if (elapsed < spinDuration) {
-          currentAngle += spinSpeed * (timestamp - (spinStartTime || timestamp));
-          spinStartTime = timestamp;
-          drawWheel(currentAngle);
-          animationFrameId = requestAnimationFrame(animateSpin);
-        } else {
-          currentAngle = targetAngle;
-          drawWheel(currentAngle);
-          spinning = false;
-          cancelAnimationFrame(animationFrameId);
-          // Determine the winning segment
-          const normalizedAngle = currentAngle % (2 * Math.PI);
-          const winningSegmentIndex = Math.floor((2 * Math.PI - normalizedAngle) / segmentAngle) % numSegments;
-          alert(`The wheel stopped at: ${segments[winningSegmentIndex]}`);
+        function easeOut(t) {
+          return 1 - Math.pow(1 - t, 3); // Cubic easing out
         }
+
+        const spinInterval = setInterval(() => {
+          const elapsed = Date.now() - startTime;
+          const t = Math.min(elapsed / spinDuration, 1); // Clamp to [0,1]
+          const easedT = easeOut(t);
+          currentAngle = easedT * totalAngle + (currentAngle % (2 * Math.PI));
+
+          drawWheel(currentAngle % (2 * Math.PI));
+
+          if (t >= 1) {
+            clearInterval(spinInterval);
+            spinning = false;
+
+            // Determine the winning segment
+            const normalizedAngle = currentAngle % (2 * Math.PI);
+            const winningSegmentIndex = Math.floor((2 * Math.PI - normalizedAngle) / segmentAngle) % numSegments;
+
+            // Update the winner in the UI
+            document.getElementById('winner').innerText = `The wheel stopped at: ${segments[winningSegmentIndex]}`;
+            document.getElementById('statusMessage').innerText = '';
+          }
+        }, interval);
       }
 
       // Handle click on the wheel to initiate spin
       canvas.addEventListener('click', () => {
         if (!spinning) {
           socket.emit('spin', { wheelId });
-          document.getElementById('statusMessage').innerText = 'Spinning...';
         }
       });
     }
 
-    // Function to generate random colors
+    // Function to generate random colors (unused now)
     function getRandomColor() {
       const letters = '0123456789ABCDEF';
       let color = '#';

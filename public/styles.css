@@ -8,7 +8,7 @@ body {
   }
   
   .container {
-    width: 80%;
+    width: 90%;
     max-width: 800px;
     margin: auto;
     padding: 20px;
@@ -33,11 +33,12 @@ body {
     margin-top: 20px;
     border: 2px solid #333;
     border-radius: 50%;
+    cursor: pointer; /* Indicate that it's clickable */
   }
   
   #pointer {
     position: absolute;
-    top: 50px; /* Adjust based on canvas size */
+    top: 20px; /* Adjust based on canvas size */
     left: 50%;
     transform: translateX(-50%);
     width: 0; 
@@ -63,5 +64,12 @@ body {
   .success {
     color: green;
     margin-top: 10px;
+  }
+  
+  #winner {
+    margin-top: 20px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #2ECC71; /* Bright green for visibility */
   }
   

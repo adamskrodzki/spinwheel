@@ -26,6 +26,20 @@ const createWheelLimiter = rateLimit({
   message: { error: 'Too many wheels created from this IP, please try again after a minute.' }
 });
 
+// Predefined list of bright colors for segments
+const predefinedColors = [
+  '#FF5733', // Red
+  '#33FF57', // Green
+  '#3357FF', // Blue
+  '#F1C40F', // Yellow
+  '#9B59B6', // Purple
+  '#E67E22', // Orange
+  '#1ABC9C', // Teal
+  '#E74C3C', // Dark Red
+  '#3498DB', // Light Blue
+  '#2ECC71'  // Light Green
+];
+
 // API endpoint to create a new wheel
 app.post('/create-wheel', createWheelLimiter, (req, res) => {
   let { segments } = req.body;
@@ -37,9 +51,13 @@ app.post('/create-wheel', createWheelLimiter, (req, res) => {
   // Sanitize each segment to prevent XSS
   segments = segments.map(seg => sanitizeHtml(seg));
 
+  // Assign colors to segments
+  const colors = segments.map((seg, index) => predefinedColors[index % predefinedColors.length]);
+
   const wheelId = uuidv4();
   wheels[wheelId] = {
     segments,
+    colors,
     isSpinning: false
   };
 
@@ -52,7 +70,7 @@ app.get('/wheel-config/:wheelId', (req, res) => {
   const wheel = wheels[wheelId];
 
   if (wheel) {
-    res.json({ segments: wheel.segments });
+    res.json({ segments: wheel.segments, colors: wheel.colors });
   } else {
     res.status(404).json({ error: 'Wheel not found' });
   }
