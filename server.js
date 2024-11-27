@@ -1,11 +1,13 @@
 // server.js
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
+const sanitizeHtml = require('sanitize-html');
+const rateLimit = require('express-rate-limit');
 const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http, {
   cors: {
-    origin: "*", // Adjust this in production for security
+    origin: "*", // For production, restrict to your domain
     methods: ["GET", "POST"]
   }
 });
@@ -17,18 +19,23 @@ const wheels = {};
 // Middleware to parse JSON bodies
 app.use(express.json());
 
-// Serve static files from the 'public' directory
-// Define specific routes before the static middleware to prevent overriding
-// For example, /create and /wheel/:wheelId should be defined before the static middleware
-// However, in Express, app.use(express.static) doesn't override specific routes
+// Rate limiter for creating wheels (max 10 requests per minute per IP)
+const createWheelLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // limit each IP to 10 requests per windowMs
+  message: { error: 'Too many wheels created from this IP, please try again after a minute.' }
+});
 
 // API endpoint to create a new wheel
-app.post('/create-wheel', (req, res) => {
-  const { segments } = req.body;
+app.post('/create-wheel', createWheelLimiter, (req, res) => {
+  let { segments } = req.body;
 
   if (!segments || !Array.isArray(segments) || segments.length < 2) {
     return res.status(400).json({ error: 'Invalid segments. Provide an array with at least two segments.' });
   }
+
+  // Sanitize each segment to prevent XSS
+  segments = segments.map(seg => sanitizeHtml(seg));
 
   const wheelId = uuidv4();
   wheels[wheelId] = {

@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <title>View Spin Wheel</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
   <div class="container">
@@ -70,8 +70,8 @@
         'segments': winwheelSegments,
         'animation': {
           'type': 'spinToStop',
-          'duration': 5,
-          'spins': 8,
+          'duration': 5, // Will be overridden by spin data
+          'spins': 8,    // Will be overridden by spin data
           'callbackFinished': alertPrize
         }
       });
