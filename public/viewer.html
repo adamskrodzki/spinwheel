@@ -114,26 +114,24 @@
     });
 
     // Function to perform the spin based on received spin data
-    // viewer.html (excerpt)
     function performSpin(spinData) {
-    if (theWheel) {
+      if (theWheel) {
         theWheel.animation = {
-        'type': 'spinToStop',
-        'duration': spinData.duration,
-        'spins': spinData.spins,
-        'stopAngle': spinData.stopAngle,
-        'callbackFinished': () => {
+          'type': 'spinToStop',
+          'duration': spinData.duration,
+          'spins': spinData.spins,
+          'stopAngle': spinData.stopAngle,
+          'callbackFinished': () => {
             const segment = theWheel.getSegmentAtAngle(spinData.stopAngle);
             alert("The wheel stopped at: " + segment.text);
             // Re-enable the spin button after the spin finishes
             document.getElementById('spinButton').disabled = false;
             document.getElementById('statusMessage').innerText = '';
-        }
+          }
         };
         theWheel.startAnimation();
+      }
     }
-    }
-
   </script>
 </body>
 </html>
