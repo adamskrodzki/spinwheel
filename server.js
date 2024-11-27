@@ -129,7 +129,7 @@ io.on('connection', (socket) => {
   });
 });
 
-// Function to generate random spin parameters
+// Function to generate deterministic spin parameters
 function generateSpinParameters(numSegments) {
   const spins = Math.floor(Math.random() * 5) + 5; // Random spins between 5 and 9
   const duration = 5; // 5 seconds

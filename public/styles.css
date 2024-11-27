@@ -31,11 +31,13 @@ body {
   
   #wheelCanvas {
     margin-top: 20px;
+    border: 2px solid #333;
+    border-radius: 50%;
   }
   
   #pointer {
     position: absolute;
-    top: -20px;
+    top: 50px; /* Adjust based on canvas size */
     left: 50%;
     transform: translateX(-50%);
     width: 0; 
