@@ -61,7 +61,7 @@
       const numSegments = segments.length;
       const segmentAngle = 2 * Math.PI / numSegments;
 
-      // Draw the wheel with an initial rotation to align 0 radians at the top
+      // Initial rotation to align 0 radians at the top
       let currentAngle = 0;
 
       function drawWheel(angleOffset = 0) {
@@ -116,7 +116,7 @@
 
         targetAngle = currentAngle + totalAngle;
 
-        spinStartTime = null;
+        spinStartTime = Date.now();
         spinning = true;
         document.getElementById('statusMessage').innerText = 'Spinning...';
         document.getElementById('winner').innerText = '';
@@ -143,7 +143,7 @@
           const elapsed = Date.now() - startTime;
           const t = Math.min(elapsed / spinDuration, 1); // Clamp to [0,1]
           const easedT = easeOut(t);
-          currentAngle = easedT * totalAngle + (currentAngle % (2 * Math.PI));
+          currentAngle = easedT * totalAngle;
 
           drawWheel(currentAngle % (2 * Math.PI));
 

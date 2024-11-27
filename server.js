@@ -149,7 +149,7 @@ io.on('connection', (socket) => {
 
 // Function to generate deterministic spin parameters
 function generateSpinParameters(numSegments) {
-  const spins = Math.floor(Math.random() * 5) + 5; // Random spins between 5 and 9
+  const spins = Math.floor(Math.random() * 3) + 5; // Random spins between 5 and 7 for smoother animation
   const duration = 5; // 5 seconds
   const stopSegment = Math.floor(Math.random() * numSegments) + 1; // Segment number (1-indexed)
   const segmentAngle = 360 / numSegments;

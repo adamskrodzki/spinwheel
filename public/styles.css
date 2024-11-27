@@ -18,13 +18,13 @@ body {
     width: 100%;
     height: 150px;
     padding: 10px;
-    font-size: 16px;
+    font-size: 18px; /* Increased font size */
     resize: vertical;
   }
   
   button {
-    padding: 10px 20px;
-    font-size: 18px;
+    padding: 12px 24px;
+    font-size: 20px; /* Increased font size */
     cursor: pointer;
     margin-top: 10px;
   }
@@ -59,11 +59,13 @@ body {
   .error {
     color: red;
     margin-top: 10px;
+    font-size: 18px; /* Increased font size */
   }
   
   .success {
-    color: green;
+    color: #2ECC71; /* Bright green for visibility */
     margin-top: 10px;
+    font-size: 24px; /* Increased font size */
   }
   
   #winner {
