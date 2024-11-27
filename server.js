@@ -5,7 +5,8 @@ const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http, {
   cors: {
-    origin: "*",
+    origin: "*", // Adjust this in production for security
+    methods: ["GET", "POST"]
   }
 });
 const path = require('path');
@@ -13,11 +14,13 @@ const path = require('path');
 // In-memory storage for wheel configurations and spin states
 const wheels = {};
 
-// Serve static files from the 'public' directory
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Parse JSON bodies (for API endpoints)
+// Middleware to parse JSON bodies
 app.use(express.json());
+
+// Serve static files from the 'public' directory
+// Define specific routes before the static middleware to prevent overriding
+// For example, /create and /wheel/:wheelId should be defined before the static middleware
+// However, in Express, app.use(express.static) doesn't override specific routes
 
 // API endpoint to create a new wheel
 app.post('/create-wheel', (req, res) => {
@@ -36,24 +39,37 @@ app.post('/create-wheel', (req, res) => {
   res.json({ wheelId });
 });
 
+// API endpoint to get wheel configuration
+app.get('/wheel-config/:wheelId', (req, res) => {
+  const { wheelId } = req.params;
+  const wheel = wheels[wheelId];
+
+  if (wheel) {
+    res.json({ segments: wheel.segments });
+  } else {
+    res.status(404).json({ error: 'Wheel not found' });
+  }
+});
+
 // Serve the creator page
 app.get('/create', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'creator.html'));
 });
 
-// API endpoint to get wheel configuration
-app.get('/wheel-config/:wheelId', (req, res) => {
-    const { wheelId } = req.params;
-    const wheel = wheels[wheelId];
-  
-    if (wheel) {
-      res.json({ segments: wheel.segments });
-    } else {
-      res.status(404).json({ error: 'Wheel not found' });
-    }
-  });
+// Serve the viewer page
+app.get('/wheel/:wheelId', (req, res) => {
+  const { wheelId } = req.params;
+  if (wheels[wheelId]) {
+    res.sendFile(path.join(__dirname, 'public', 'viewer.html'));
+  } else {
+    res.status(404).send('Wheel not found');
+  }
+});
 
-// Handle client connections
+// Serve other static files (CSS, JS)
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Handle client connections via Socket.IO
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
 
@@ -62,7 +78,7 @@ io.on('connection', (socket) => {
     if (wheels[wheelId]) {
       socket.join(wheelId);
       console.log(`Socket ${socket.id} joined wheel ${wheelId}`);
-      // Send current wheel state to the newly connected client
+      // Optionally, send current state or history
     } else {
       socket.emit('error', 'Wheel not found');
     }
