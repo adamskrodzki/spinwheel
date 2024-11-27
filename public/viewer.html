@@ -56,32 +56,36 @@
       const canvas = document.getElementById('wheelCanvas');
       const ctx = canvas.getContext('2d');
 
+      // Initialize currentAngle before using it
+      let currentAngle = 0;
+      let centerX = canvas.width / 2;
+      let centerY = canvas.height / 2;
+      let radius = Math.min(centerX, centerY) - 20;
+      console.log(radius, centerX, centerY)
+      const numSegments = segments.length;
+      const segmentAngle = 2 * Math.PI / numSegments;
+
+
       // Function to set canvas size based on container
       function setCanvasSize() {
         const container = document.getElementById('canvas-container');
         const rect = container.getBoundingClientRect();
         canvas.width = rect.width;
         canvas.height = rect.height;
-        console.log(canvas.height)
-        console.log(canvas.width)
+        centerX = canvas.width / 2;
+        centerY = canvas.height / 2;
+        radius = Math.min(centerX, centerY) - 20;
+        console.log(`Width ${canvas.width} Height ${canvas.width}`);
+        console.log(`centerX ${centerX} centerY ${centerY} radius ${radius}`);
         drawWheel(currentAngle);
       }
 
       // Initial canvas size setup
+      setCanvasSize();
 
       // Redraw wheel on window resize
       window.addEventListener('resize', setCanvasSize);
 
-      const centerX = canvas.width / 2;
-      const centerY = canvas.height / 2;
-      const radius = Math.min(centerX, centerY) - 20;
-      const numSegments = segments.length;
-      const segmentAngle = 2 * Math.PI / numSegments;
-
-      // Initial rotation to align 0 radians at the top
-      let currentAngle = 0;
-
-      setCanvasSize();
       function drawWheel(angleOffset = 0) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.save();
@@ -108,7 +112,7 @@
           ctx.rotate(startAngle + segmentAngle / 2);
           ctx.textAlign = 'right';
           ctx.fillStyle = '#FFFFFF'; // White text for contrast
-          ctx.font = '20px Arial'; // Bigger font
+          ctx.font = '1.2em Arial'; // Responsive font
           ctx.fillText(segments[i], radius - 10, 10);
           ctx.restore();
         }
@@ -130,6 +134,12 @@
         const { spins, duration, stopAngle, winningSegment } = spinData;
         spinDuration = duration * 1000; // Convert to milliseconds
         totalAngle = (spins * 2 * Math.PI) + (stopAngle * Math.PI / 180); // Total radians to spin
+
+        // Adjust totalAngle to prevent excessive rotations
+        const maxSpins = 10;
+        if (spins > maxSpins) {
+          totalAngle = (maxSpins * 2 * Math.PI) + (stopAngle * Math.PI / 180);
+        }
 
         targetAngle = currentAngle + totalAngle;
 
