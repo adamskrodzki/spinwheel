@@ -1,77 +1,129 @@
 /* public/styles.css */
+
+/* General Styles */
 body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     font-family: Arial, sans-serif;
     background-color: #f0f0f0;
     margin: 0;
-    padding: 0;
+    padding: 20px;
+    height: 100vh; /* Full viewport height */
+    box-sizing: border-box;
   }
   
   .container {
-    width: 90%;
+    width: 100%;
     max-width: 800px;
-    margin: auto;
-    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
   
   textarea {
     width: 100%;
     height: 150px;
     padding: 10px;
-    font-size: 18px; /* Increased font size */
+    font-size: 1.2em; /* Responsive font size */
     resize: vertical;
   }
   
   button {
     padding: 12px 24px;
-    font-size: 20px; /* Increased font size */
+    font-size: 1.2em; /* Responsive font size */
     cursor: pointer;
     margin-top: 10px;
   }
   
+  #canvas-container {
+    position: relative;
+    width: 90vw;
+    max-width: 500px; /* Maximum size for larger screens */
+    height: 90vw; /* Maintain square aspect ratio */
+    max-height: 500px;
+    margin: 40px auto; /* Center the container */
+  }
+  
   #wheelCanvas {
-    margin-top: 20px;
+    width: 100%;
+    height: 100%;
     border: 2px solid #333;
     border-radius: 50%;
     cursor: pointer; /* Indicate that it's clickable */
+    display: block;
   }
   
   #pointer {
     position: absolute;
     top: 50%;
-    right: -30px; /* Position slightly outside the wheel */
-    transform: translateY(-50%);
+    right: 0%; /* Position at the right edge */
+    transform: translate(50%, -50%); /* Shift to point inward */
     width: 0; 
     height: 0; 
-    border-top: 15px solid transparent;
-    border-bottom: 15px solid transparent;
-    border-left: 20px solid red; /* Triangle pointing inward */
+    border-top: 1.5em solid transparent; /* Responsive size */
+    border-bottom: 1.5em solid transparent; /* Responsive size */
+    border-left: 2em solid red; /* Triangle pointing inward */
     z-index: 10;
-  }
-  
-  #canvas-container {
-    position: relative;
-    margin: auto;
-    width: 500px;
-    height: 500px;
   }
   
   .error {
     color: red;
     margin-top: 10px;
-    font-size: 18px; /* Increased font size */
+    font-size: 1.2em; /* Responsive font size */
   }
   
   .success {
     color: #2ECC71; /* Bright green for visibility */
     margin-top: 10px;
-    font-size: 24px; /* Increased font size */
+    font-size: 1.5em; /* Increased font size */
   }
   
   #winner {
     margin-top: 20px;
-    font-size: 24px;
+    font-size: 1.5em; /* Increased font size */
     font-weight: bold;
     color: #2ECC71; /* Bright green for visibility */
+  }
+  
+  /* Responsive Typography */
+  @media (max-width: 600px) {
+    /* Adjust pointer size on smaller screens */
+    #pointer {
+      border-top: 1em solid transparent;
+      border-bottom: 1em solid transparent;
+      border-left: 1.5em solid red;
+    }
+  
+    /* Reduce font sizes for smaller screens */
+    textarea {
+      font-size: 1em;
+    }
+  
+    button {
+      font-size: 1em;
+      padding: 10px 20px;
+    }
+  
+    .error {
+      font-size: 1em;
+    }
+  
+    .success {
+      font-size: 1.2em;
+    }
+  
+    #winner {
+      font-size: 1.2em;
+    }
+  
+    #canvas-container {
+      width: 90vw;
+      height: 90vw;
+      max-width: 400px;
+      max-height: 400px;
+    }
   }
   

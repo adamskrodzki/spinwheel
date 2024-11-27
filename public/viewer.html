@@ -11,7 +11,7 @@
     <h1>Collaborative Spin Wheel</h1>
     <div id="canvas-container">
       <div id="pointer"></div>
-      <canvas id="wheelCanvas" width="500" height="500"></canvas>
+      <canvas id="wheelCanvas"></canvas>
     </div>
     <p id="statusMessage" class="error"></p>
     <div id="winner" class="success"></div>
@@ -55,6 +55,23 @@
     function initializeWheel(segments, colors) {
       const canvas = document.getElementById('wheelCanvas');
       const ctx = canvas.getContext('2d');
+
+      // Function to set canvas size based on container
+      function setCanvasSize() {
+        const container = document.getElementById('canvas-container');
+        const rect = container.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+        console.log(canvas.height)
+        console.log(canvas.width)
+        drawWheel(currentAngle);
+      }
+
+      // Initial canvas size setup
+
+      // Redraw wheel on window resize
+      window.addEventListener('resize', setCanvasSize);
+
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
       const radius = Math.min(centerX, centerY) - 20;
@@ -64,6 +81,7 @@
       // Initial rotation to align 0 radians at the top
       let currentAngle = 0;
 
+      setCanvasSize();
       function drawWheel(angleOffset = 0) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.save();
@@ -113,13 +131,6 @@
         spinDuration = duration * 1000; // Convert to milliseconds
         totalAngle = (spins * 2 * Math.PI) + (stopAngle * Math.PI / 180); // Total radians to spin
 
-        // Adjust totalAngle to prevent excessive rotations
-        // For example, limit to a maximum of 10 full spins
-        const maxSpins = 10;
-        if (spins > maxSpins) {
-          totalAngle = (maxSpins * 2 * Math.PI) + (stopAngle * Math.PI / 180);
-        }
-
         targetAngle = currentAngle + totalAngle;
 
         spinStartTime = Date.now();
@@ -136,16 +147,15 @@
         document.getElementById('statusMessage').innerText = '';
       });
 
-      // Animate the spin using setInterval with smooth deceleration
+      // Animate the spin using requestAnimationFrame with smooth deceleration
       function animateSpin() {
         const startTime = Date.now();
-        const interval = 20; // milliseconds
 
         function easeOut(t) {
           return 1 - Math.pow(1 - t, 3); // Cubic easing out
         }
 
-        const spinInterval = setInterval(() => {
+        function update() {
           const elapsed = Date.now() - startTime;
           const t = Math.min(elapsed / spinDuration, 1); // Clamp to [0,1]
           const easedT = easeOut(t);
@@ -153,10 +163,9 @@
 
           drawWheel(currentAngle % (2 * Math.PI));
 
-          if (t >= 1) {
-            clearInterval(spinInterval);
-            spinning = false;
-
+          if (t < 1) {
+            requestAnimationFrame(update);
+          } else {
             // Determine the winning segment
             const normalizedAngle = currentAngle % (2 * Math.PI);
             const winningSegmentIndex = Math.floor((2 * Math.PI - normalizedAngle) / segmentAngle) % numSegments;
@@ -164,8 +173,11 @@
             // Update the winner in the UI
             document.getElementById('winner').innerText = `The wheel stopped at: ${segments[winningSegmentIndex]}`;
             document.getElementById('statusMessage').innerText = '';
+            spinning = false;
           }
-        }, interval);
+        }
+
+        requestAnimationFrame(update);
       }
 
       // Handle click on the wheel to initiate spin
@@ -174,16 +186,6 @@
           socket.emit('spin', { wheelId });
         }
       });
-    }
-
-    // Function to generate random colors (unused now)
-    function getRandomColor() {
-      const letters = '0123456789ABCDEF';
-      let color = '#';
-      for (let i = 0; i < 6; i++) {
-        color += letters[Math.floor(Math.random() * 16)];
-      }
-      return color;
     }
   </script>
 </body>
