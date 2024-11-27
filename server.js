@@ -58,7 +58,8 @@ app.post('/create-wheel', createWheelLimiter, (req, res) => {
   wheels[wheelId] = {
     segments,
     colors,
-    isSpinning: false
+    isSpinning: false,
+    currentAngle: 0 // Initialize currentAngle to 0
   };
 
   res.json({ wheelId });
@@ -70,7 +71,11 @@ app.get('/wheel-config/:wheelId', (req, res) => {
   const wheel = wheels[wheelId];
 
   if (wheel) {
-    res.json({ segments: wheel.segments, colors: wheel.colors });
+    res.json({ 
+      segments: wheel.segments, 
+      colors: wheel.colors,
+      currentAngle: wheel.currentAngle // Include currentAngle
+    });
   } else {
     res.status(404).json({ error: 'Wheel not found' });
   }
@@ -103,7 +108,8 @@ io.on('connection', (socket) => {
     if (wheels[wheelId]) {
       socket.join(wheelId);
       console.log(`Socket ${socket.id} joined wheel ${wheelId}`);
-      // Optionally, send current state or history
+      // Send the currentAngle to the newly connected client
+      socket.emit('currentAngle', wheels[wheelId].currentAngle);
     } else {
       socket.emit('error', 'Wheel not found');
     }
@@ -133,9 +139,13 @@ io.on('connection', (socket) => {
     // Broadcast the spin event with spin data to all clients in the wheel room
     io.to(wheelId).emit('spin', spinData);
 
-    // After the duration, mark the wheel as not spinning
+    // After the duration, mark the wheel as not spinning and update currentAngle
     setTimeout(() => {
       wheel.isSpinning = false;
+      // Update currentAngle based on spinData
+      wheel.currentAngle = (wheel.currentAngle + (spinData.spins * 2 * Math.PI) + (spinData.stopAngle * Math.PI / 180)) % (2 * Math.PI);
+      // Broadcast the updated currentAngle to all clients
+      io.to(wheelId).emit('currentAngle', wheel.currentAngle);
       // Optionally, broadcast the result
       io.to(wheelId).emit('spinEnded', spinData);
     }, spinData.duration * 1000); // Convert to milliseconds

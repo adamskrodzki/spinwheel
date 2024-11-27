@@ -42,7 +42,7 @@
         if (data.error) {
           document.getElementById('statusMessage').innerText = data.error;
         } else {
-          initializeWheel(data.segments, data.colors);
+          initializeWheel(data.segments, data.colors, data.currentAngle);
         }
       })
       .catch(error => {
@@ -52,19 +52,17 @@
 
     // Function to initialize the wheel
     let spinning = false;
-    function initializeWheel(segments, colors) {
+    function initializeWheel(segments, colors, initialAngle) {
       const canvas = document.getElementById('wheelCanvas');
       const ctx = canvas.getContext('2d');
 
       // Initialize currentAngle before using it
-      let currentAngle = 0;
+      let currentAngle = initialAngle || 0;
       let centerX = canvas.width / 2;
       let centerY = canvas.height / 2;
       let radius = Math.min(centerX, centerY) - 20;
-      console.log(radius, centerX, centerY)
       const numSegments = segments.length;
       const segmentAngle = 2 * Math.PI / numSegments;
-
 
       // Function to set canvas size based on container
       function setCanvasSize() {
@@ -75,8 +73,6 @@
         centerX = canvas.width / 2;
         centerY = canvas.height / 2;
         radius = Math.min(centerX, centerY) - 20;
-        console.log(`Width ${canvas.width} Height ${canvas.width}`);
-        console.log(`centerX ${centerX} centerY ${centerY} radius ${radius}`);
         drawWheel(currentAngle);
       }
 
@@ -119,7 +115,7 @@
         ctx.restore();
       }
 
-      drawWheel();
+      drawWheel(currentAngle);
 
       // Spin functionality
       let targetAngle = 0;
@@ -155,6 +151,12 @@
       socket.on('spinEnded', (spinData) => {
         spinning = false;
         document.getElementById('statusMessage').innerText = '';
+      });
+
+      // Handle currentAngle updates from the server
+      socket.on('currentAngle', (updatedAngle) => {
+        currentAngle = updatedAngle;
+        drawWheel(currentAngle);
       });
 
       // Animate the spin using requestAnimationFrame with smooth deceleration

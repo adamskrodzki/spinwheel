@@ -15,25 +15,18 @@ body {
     box-sizing: border-box;
   }
   
-  /* Adjusted #canvas-container to account for other page elements */
-#canvas-container {
-    position: relative;
-    width: 70vmin; /* Reduced from 90vmin to allow space for other elements */
-    height: 70vmin; /* Maintain square aspect ratio based on smaller dimension */
-    max-width: 500px; /* Maximum size for larger screens */
-    max-height: 500px;
-    margin: 40px auto; /* Center the container */
-}
-
-/* Ensure the container uses Flexbox to distribute space effectively */
-.container {
+  .container {
+    width: 100%;
+    max-width: 800px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start; /* Start from top and allow natural spacing */
-    height: 100%; /* Take full height of the parent */
-    box-sizing: border-box; /* Include padding and borders in the element's total width and height */
-}
+  }
+  
+  /* Ensure consistent spacing between child elements */
+  .container > * {
+    margin-bottom: 20px; /* Space between elements */
+  }
   
   textarea {
     width: 100%;
@@ -50,6 +43,14 @@ body {
     margin-top: 10px;
   }
   
+  #canvas-container {
+    position: relative;
+    width: 70vmin; /* Reduced from 90vmin to allow space for other elements */
+    height: 70vmin; /* Maintain square aspect ratio based on smaller dimension */
+    max-width: 500px; /* Maximum size for larger screens */
+    max-height: 500px;
+    margin: 40px auto; /* Center the container */
+  }
   
   #wheelCanvas {
     width: 100%;
@@ -91,35 +92,50 @@ body {
     font-weight: bold;
     color: #2ECC71; /* Bright green for visibility */
   }
-
-/* Optional: Adjust margins and spacing for better layout on smaller screens */
-@media (max-width: 600px) {
-    /* Further reduce the canvas size on very small screens */
-    #canvas-container {
-        width: 60vmin;
-        height: 60vmin;
-        max-width: 400px;
-        max-height: 400px;
-        margin: 20px auto; /* Reduced margin to save space */
+  
+  /* Responsive Typography and Pointer Adjustments */
+  @media (max-width: 600px) {
+    /* Adjust pointer size on smaller screens */
+    #pointer {
+      border-top: 1em solid transparent;
+      border-bottom: 1em solid transparent;
+      border-left: 1.5em solid red;
+      right: -15px; /* Adjust position */
     }
-
-    /* Adjust headings and texts to occupy less space */
-    h1 {
-        font-size: 1.5em; /* Reduce font size */
-        margin-bottom: 10px; /* Less space below the heading */
+  
+    /* Reduce font sizes for smaller screens */
+    textarea {
+      font-size: 1em;
     }
-
-    p {
-        font-size: 1em; /* Reduce font size */
-        margin-bottom: 10px; /* Less space below paragraphs */
+  
+    button {
+      font-size: 1em;
+      padding: 10px 20px;
     }
-
-    /* Adjust result display fonts */
+  
+    .error {
+      font-size: 1em;
+    }
+  
+    .success {
+      font-size: 1.2em;
+    }
+  
     #winner {
-        font-size: 1.2em;
+      font-size: 1.2em;
     }
-
-    .error, .success {
-        font-size: 1em;
+  
+    #canvas-container {
+      width: 60vmin; /* Further reduced for very small screens */
+      height: 60vmin;
+      max-width: 400px;
+      max-height: 400px;
+      margin: 20px auto; /* Reduced margin to save space */
     }
-}
+  
+    /* Adjust spacing between elements for smaller screens */
+    .container > * {
+      margin-bottom: 15px;
+    }
+  }
+  
