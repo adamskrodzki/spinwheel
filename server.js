@@ -1,4 +1,3 @@
-// server.js
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const sanitizeHtml = require('sanitize-html');
@@ -12,9 +11,20 @@ const io = require('socket.io')(http, {
   }
 });
 const path = require('path');
+const fs = require('fs');
 
-// In-memory storage for wheel configurations and spin states
-const wheels = {};
+// Path to the persistent storage file
+const wheelsFilePath = path.join(__dirname, 'wheels.json');
+
+// Load wheel configurations from persistent storage
+let wheels = {};
+try {
+  const data = fs.readFileSync(wheelsFilePath);
+  wheels = JSON.parse(data);
+} catch (err) {
+  console.error('Error loading wheel configurations:', err);
+  // If there's an error, start with an empty object
+}
 
 // Middleware to parse JSON bodies
 app.use(express.json());
@@ -61,6 +71,9 @@ app.post('/create-wheel', createWheelLimiter, (req, res) => {
     isSpinning: false,
     currentAngle: 0 // Initialize currentAngle to 0
   };
+
+  // Save the updated wheels object to persistent storage
+  saveWheels();
 
   res.json({ wheelId });
 });
@@ -172,6 +185,23 @@ function generateSpinParameters(numSegments) {
     winningSegment: stopSegment
   };
 }
+
+// Function to save the wheels object to persistent storage
+function saveWheels() {
+  try {
+    const data = JSON.stringify(wheels);
+    fs.writeFileSync(wheelsFilePath, data);
+  } catch (err) {
+    console.error('Error saving wheel configurations:', err);
+  }
+}
+
+// Gracefully handle server termination (e.g., Ctrl+C)
+process.on('SIGINT', () => {
+  console.log('Shutting down server...');
+  saveWheels();
+  process.exit();
+});
 
 // Start the server
 const PORT = process.env.PORT || 3000;
