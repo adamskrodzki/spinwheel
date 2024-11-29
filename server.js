@@ -14,7 +14,7 @@ const path = require('path');
 const fs = require('fs');
 
 // Path to the persistent storage file
-const wheelsFilePath = path.join(__dirname, 'wheels.json');
+const wheelsFilePath = path.join(__dirname, 'public', 'spinwheel', 'wheels.json');
 
 // Load wheel configurations from persistent storage
 let wheels = {};
