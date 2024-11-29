@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Maze Game Player</title>
+</head>
+<body>
+  <div id="game-status">Waiting for game to start...</div>
+  <div id="maze-container" style="display: none;">
+    <canvas id="mazeCanvas"></canvas>
+  </div>
+  <script>
+    const gameId = window.location.pathname.split('/').pop();
+    const playerNum = window.location.pathname.includes('player1') ? 1 : 2;
+    const socket = io();
+    socket.on('connect', () => {
+      socket.emit('joinGame', { gameId, player: `player${playerNum}` });
+    });
+    socket.on('gameStarted', () => {
+      document.getElementById('game-status').style.display = 'none';
+      document.getElementById('maze-container').style.display = 'block';
+      // Draw mock maze
+      const canvas = document.getElementById('mazeCanvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 300;
+      canvas.height = 300;
+      ctx.fillStyle = 'lightgreen';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = 'black';
+      ctx.fillRect(100, 100, 100, 100); // Mock obstacle
+    });
+    socket.on('redirect', (url) => {
+      window.location.href = url;
+    });
+  </script>
+</body>
+</html>

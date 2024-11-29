@@ -59,6 +59,9 @@
       gameStatusDiv.style.display = 'block';
       gameStatusDiv.textContent = `Game ended! Winner: ${winner}`;
     });
+    socket.on('redirect', (url) => {
+      window.location.href = url;
+    });
   </script>
 </body>
 </html>
