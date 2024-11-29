@@ -26,8 +26,17 @@
       socket.emit('getGameStatus', gameId);
     });
 
+    socket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+    });
+
+    socket.on('disconnect', (reason) => {
+      console.log('Socket disconnected:', reason);
+    });
+
     socket.on('gameStatus', (status) => {
       console.log('Game status received:', status);
+      if(status.gameId !== gameId) return; 
       gameStatusDiv.textContent = `Players: ${status.players.length}, Game Started: ${status.gameStarted}, Game Ended: ${status.gameEnded}, Winner: ${status.winner}`;
       if (status.players.length < 2) {
         joinButton.style.display = 'block';

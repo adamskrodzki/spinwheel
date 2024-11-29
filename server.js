@@ -191,7 +191,6 @@ io.on('connection', (socket) => {
       return;
     }
     mazeGames[gameId].players.push(player);
-    socket.join(gameId);
     const gameStatus = mazeGames[gameId];
     io.to(gameId).emit('gameStatus', gameStatus);
     console.log(`Game status broadcasted to game ${gameId}:`, gameStatus);
@@ -209,9 +208,11 @@ io.on('connection', (socket) => {
   });
 
   socket.on('getGameStatus', gameId => {
-    console.log(`Getting game status for game ${gameId}`);
+    console.log(`getGameStatus event received for game ${gameId}`);
     if (mazeGames[gameId]) {
-      io.to(gameId).emit('gameStatus', mazeGames[gameId]); 
+      console.log(`Sending game status for game ${gameId}:`, mazeGames[gameId]);
+    } else {
+      console.log(`Game ${gameId} not found`);
     }
   });
 
