@@ -1,0 +1,219 @@
+<!-- public/viewer.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>View Spin Wheel</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="container">
+    <div id="canvas-container">
+      <canvas id="wheelCanvas"></canvas>
+    </div>
+    <p id="statusMessage" class="error"></p>
+    <div id="winner" class="success"></div>
+  </div>
+
+  <!-- Include Socket.IO -->
+  <script src="/socket.io/socket.io.js"></script>
+
+  <script>
+    const socket = io();
+
+    // Extract wheelId from URL
+    const pathParts = window.location.pathname.split('/');
+    const wheelId = pathParts[pathParts.length - 2]; // Adjust index to account for /spinwheel/wheel
+
+    // Join the wheel room
+    socket.emit('joinWheel', wheelId);
+
+    // Handle errors
+    socket.on('error', (message) => {
+      document.getElementById('statusMessage').innerText = message;
+    });
+
+    // Fetch wheel configuration
+    fetch(`/spinwheel/wheel-config/${wheelId}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          document.getElementById('statusMessage').innerText = data.error;
+        } else {
+          initializeWheel(data.segments, data.colors, data.currentAngle);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('statusMessage').innerText = 'An error occurred while loading the wheel.';
+      });
+
+    // Function to initialize the wheel
+    let spinning = false;
+    function initializeWheel(segments, colors, initialAngle) {
+      const canvas = document.getElementById('wheelCanvas');
+      const ctx = canvas.getContext('2d');
+
+      // Initialize currentAngle before using it
+      let currentAngle = initialAngle || 0;
+      let centerX = canvas.width / 2;
+      let centerY = canvas.height / 2;
+      let radius = Math.min(centerX, centerY) - 20;
+      const numSegments = segments.length;
+      const segmentAngle = 2 * Math.PI / numSegments;
+
+      // Function to set canvas size based on container
+      function setCanvasSize() {
+        const container = document.getElementById('canvas-container');
+        const rect = container.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+        centerX = canvas.width / 2;
+        centerY = canvas.height / 2;
+        radius = Math.min(centerX, centerY) - 20;
+        drawWheel(currentAngle);
+      }
+
+      // Initial canvas size setup
+      setCanvasSize();
+
+      // Redraw wheel on window resize
+      window.addEventListener('resize', setCanvasSize);
+
+      function drawWheel(angleOffset = 0) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(angleOffset);
+        ctx.translate(-centerX, -centerY);
+        for (let i = 0; i < numSegments; i++) {
+          const startAngle = i * segmentAngle;
+          const endAngle = startAngle + segmentAngle;
+
+          // Draw segment
+          ctx.beginPath();
+          ctx.moveTo(centerX, centerY);
+          ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+          ctx.closePath();
+          ctx.fillStyle = colors[i];
+          ctx.fill();
+          ctx.strokeStyle = '#000';
+          ctx.stroke();
+
+          // Draw text
+          ctx.save();
+          ctx.translate(centerX, centerY);
+          ctx.rotate(startAngle + segmentAngle / 2);
+          ctx.textAlign = 'right';
+          ctx.fillStyle = '#FFFFFF'; // White text for contrast
+          ctx.font = '1.2em Arial'; // Responsive font
+          ctx.fillText(segments[i], radius * 0.9, 10);
+          ctx.restore();
+        }
+        ctx.restore();
+        drawPointer(ctx, centerX, centerY, radius);
+      }
+
+      function drawPointer(ctx, centerX, centerY, radius) {
+        const pointerLength = radius / 4;
+        const pointerWidth = pointerLength / 2;
+        ctx.save();
+        ctx.translate(centerX + radius*1.2, centerY); // Move to the right of the circle
+        ctx.rotate(Math.PI); // Point to the left
+        ctx.beginPath();
+        ctx.moveTo(pointerLength, 0);
+        ctx.lineTo(0, pointerWidth);
+        ctx.lineTo(0, -pointerWidth);
+        ctx.closePath();
+        ctx.fillStyle = 'red';
+        ctx.fill();
+        ctx.restore();
+      }
+
+      drawWheel(currentAngle);
+
+      // Spin functionality
+      let targetAngle = 0;
+      let spinStartTime = null;
+      let spinDuration = 0;
+      let totalAngle = 0;
+
+      // Handle spin events from the server
+      socket.on('spin', (spinData) => {
+        if (spinning) return; // Prevent multiple spins
+
+        const { spins, duration, stopAngle, winningSegment } = spinData;
+        spinDuration = duration * 1000; // Convert to milliseconds
+        totalAngle = (spins * 2 * Math.PI) + (stopAngle * Math.PI / 180); // Total radians to spin
+
+        // Adjust totalAngle to prevent excessive rotations
+        const maxSpins = 10;
+        if (spins > maxSpins) {
+          totalAngle = (maxSpins * 2 * Math.PI) + (stopAngle * Math.PI / 180);
+        }
+
+        targetAngle = currentAngle + totalAngle;
+
+        spinStartTime = Date.now();
+        spinning = true;
+        document.getElementById('statusMessage').innerText = 'Spinning...';
+        document.getElementById('winner').innerText = '';
+
+        animateSpin();
+      });
+
+      // Handle spinEnded events to reset spin state
+      socket.on('spinEnded', (spinData) => {
+        spinning = false;
+        document.getElementById('statusMessage').innerText = '';
+      });
+
+      // Handle currentAngle updates from the server
+      socket.on('currentAngle', (updatedAngle) => {
+        currentAngle = updatedAngle;
+        drawWheel(currentAngle);
+      });
+
+      // Animate the spin using requestAnimationFrame with smooth deceleration
+      function animateSpin() {
+        const startTime = Date.now();
+
+        function easeOut(t) {
+          return 1 - Math.pow(1 - t, 3); // Cubic easing out
+        }
+
+        function update() {
+          const elapsed = Date.now() - startTime;
+          const t = Math.min(elapsed / spinDuration, 1); // Clamp to [0,1]
+          const easedT = easeOut(t);
+          currentAngle = easedT * totalAngle;
+
+          drawWheel(currentAngle % (2 * Math.PI));
+
+          if (t < 1) {
+            requestAnimationFrame(update);
+          } else {
+            // Determine the winning segment
+            const normalizedAngle = currentAngle % (2 * Math.PI);
+            const winningSegmentIndex = Math.floor((2 * Math.PI - normalizedAngle) / segmentAngle) % numSegments;
+
+            // Update the winner in the UI
+            document.getElementById('winner').innerText = `The wheel stopped at: ${segments[winningSegmentIndex]}`;
+            document.getElementById('statusMessage').innerText = '';
+            spinning = false;
+          }
+        }
+
+        requestAnimationFrame(update);
+      }
+
+      // Handle click on the wheel to initiate spin
+      canvas.addEventListener('click', () => {
+        if (!spinning) {
+          socket.emit('spin', { wheelId });
+        }
+      });
+    }
+  </script>
+</body>
+</html>

@@ -96,14 +96,14 @@ app.get('/spinwheel/wheel-config/:wheelId', (req, res) => {
 
 // Serve the creator page
 app.get('/spinwheel/create', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'creator.html'));
+  res.sendFile(path.join(__dirname, 'public', 'spinwheel', 'creator.html'));
 });
 
 // Serve the viewer page
 app.get('/spinwheel/wheel/:wheelId', (req, res) => {
   const { wheelId } = req.params;
   if (wheels[wheelId]) {
-    res.sendFile(path.join(__dirname, 'public', 'viewer.html'));
+    res.sendFile(path.join(__dirname, 'public', 'spinwheel', 'viewer.html'));
   } else {
     res.status(404).send('Wheel not found');
   }
