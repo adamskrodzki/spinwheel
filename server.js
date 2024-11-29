@@ -36,18 +36,18 @@ const createWheelLimiter = rateLimit({
   message: { error: 'Too many wheels created from this IP, please try again after a minute.' }
 });
 
-// Predefined list of bright colors for segments
+// Predefined list of darker colors for segments
 const predefinedColors = [
-  '#FF5733', // Red
-  '#33FF57', // Green
-  '#3357FF', // Blue
-  '#F1C40F', // Yellow
-  '#9B59B6', // Purple
-  '#E67E22', // Orange
-  '#1ABC9C', // Teal
-  '#E74C3C', // Dark Red
-  '#3498DB', // Light Blue
-  '#2ECC71'  // Light Green
+  '#CC4422', // Darker Red
+  '#22CC44', // Darker Green
+  '#2244CC', // Darker Blue
+  '#B39900', // Darker Yellow
+  '#774488', // Darker Purple
+  '#CC6600', // Darker Orange
+  '#118877', // Darker Teal
+  '#993322', // Darker Dark Red
+  '#226699', // Darker Light Blue
+  '#11AA55'  // Darker Light Green
 ];
 
 // API endpoint to create a new wheel
