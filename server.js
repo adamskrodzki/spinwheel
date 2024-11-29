@@ -21,6 +21,7 @@ let wheels = {};
 try {
   const data = fs.readFileSync(wheelsFilePath);
   wheels = JSON.parse(data);
+  console.log("Loading: "+JSON.stringify(wheels))
 } catch (err) {
   console.error('Error loading wheel configurations:', err);
   // If there's an error, start with an empty object
@@ -81,6 +82,7 @@ app.post('/spinwheel/create-wheel', createWheelLimiter, (req, res) => {
 // API endpoint to get wheel configuration
 app.get('/spinwheel/wheel-config/:wheelId', (req, res) => {
   const { wheelId } = req.params;
+  console.log("Fetching"+wheelId)
   const wheel = wheels[wheelId];
 
   if (wheel) {
