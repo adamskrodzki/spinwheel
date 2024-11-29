@@ -8,9 +8,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>Collaborative Spin Wheel</h1>
     <div id="canvas-container">
-      <div id="pointer"></div>
       <canvas id="wheelCanvas"></canvas>
     </div>
     <p id="statusMessage" class="error"></p>
@@ -109,9 +107,26 @@
           ctx.textAlign = 'right';
           ctx.fillStyle = '#FFFFFF'; // White text for contrast
           ctx.font = '1.2em Arial'; // Responsive font
-          ctx.fillText(segments[i], radius - 10, 10);
+          ctx.fillText(segments[i], radius * 0.9, 10);
           ctx.restore();
         }
+        ctx.restore();
+        drawPointer(ctx, centerX, centerY, radius);
+      }
+
+      function drawPointer(ctx, centerX, centerY, radius) {
+        const pointerLength = radius / 4;
+        const pointerWidth = pointerLength / 2;
+        ctx.save();
+        ctx.translate(centerX + radius*1.2, centerY); // Move to the right of the circle
+        ctx.rotate(Math.PI); // Point to the left
+        ctx.beginPath();
+        ctx.moveTo(pointerLength, 0);
+        ctx.lineTo(0, pointerWidth);
+        ctx.lineTo(0, -pointerWidth);
+        ctx.closePath();
+        ctx.fillStyle = 'red';
+        ctx.fill();
         ctx.restore();
       }
 
