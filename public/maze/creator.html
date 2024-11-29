@@ -38,7 +38,8 @@
       const json = await response.json();
       console.log(json);
       const messageDiv = document.getElementById('message');
-      messageDiv.innerHTML = '<p>Maze created!</p><p>Viewer URL: <a href="' + json.viewerUrl + '">' + json.viewerUrl + '</a></p><p>Player 1 URL: <a href="' + json.player1Url + '">' + json.player1Url + '</a></p><p>Player 2 URL: <a href="' + json.player2Url + '">' + json.player2Url + '</a></p>';
+      const fullViewerUrl = window.location.origin + json.viewerUrl; // Construct full URL
+      messageDiv.innerHTML = '<p>Maze created!</p><p>Viewer URL: <a href="' + fullViewerUrl + '">' + fullViewerUrl + '</a></p>';
     });
   </script>
 </body>

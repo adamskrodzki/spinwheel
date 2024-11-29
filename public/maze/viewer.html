@@ -4,6 +4,61 @@
   <title>Maze Game Viewer</title>
 </head>
 <body>
-  <p>Maze Game Viewer</p>
+  <div id="game-status">Waiting for players to join...</div>
+  <div id="join-button-container">
+    <button id="join-button">Join Game</button>
+  </div>
+  <div id="maze-container" style="display: none;">
+    <canvas id="mazeCanvas"></canvas>
+  </div>
+  <script>
+    const gameId = window.location.pathname.split('/').pop();
+    const socket = io();
+    const joinButton = document.getElementById('join-button');
+    const gameStatusDiv = document.getElementById('game-status');
+    const mazeContainer = document.getElementById('maze-container');
+    const joinButtonContainer = document.getElementById('join-button-container');
+
+    socket.on('connect', () => {
+      socket.emit('getGameStatus', gameId);
+    });
+
+    socket.on('gameStatus', (status) => {
+      if (status.players.length < 2) {
+        joinButton.style.display = 'block';
+      } else {
+        joinButton.style.display = 'none';
+      }
+      if (status.players.length === 2 && status.gameStarted) {
+        gameStatusDiv.style.display = 'none';
+        mazeContainer.style.display = 'block';
+        // Draw mock maze
+        const canvas = document.getElementById('mazeCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 300;
+        canvas.height = 300;
+        ctx.fillStyle = 'lightgreen';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'black';
+        ctx.fillRect(100, 100, 100, 100); // Mock obstacle
+      } else if (status.players.length === 2 && !status.gameStarted) {
+        gameStatusDiv.textContent = 'Waiting for game to start...';
+      } else if (status.gameEnded) {
+        gameStatusDiv.textContent = `Game ended! Winner: ${status.winner}`;
+        joinButton.style.display = 'none';
+      }
+    });
+
+    joinButton.addEventListener('click', () => {
+      socket.emit('joinGame', { gameId, player: socket.id });
+      joinButtonContainer.style.display = 'none';
+    });
+
+    socket.on('gameEnded', (winner) => {
+      mazeContainer.style.display = 'none';
+      gameStatusDiv.style.display = 'block';
+      gameStatusDiv.textContent = `Game ended! Winner: ${winner}`;
+    });
+  </script>
 </body>
 </html>

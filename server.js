@@ -6,7 +6,7 @@ const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http, {
   cors: {
-    origin: "*", // For production, restrict to your domain
+    origin: "*", 
     methods: ["GET", "POST"]
   }
 });
@@ -129,9 +129,8 @@ app.get('/spinwheel/wheel/:wheelId', (req, res) => {
 // Maze application routes
 app.post('/maze/create', (req, res) => {
   const gameId = uuidv4();
-  const { X, T, K, mazeSize } = req.body; // Get game parameters from request body
+  const { X, T, K, mazeSize } = req.body; 
 
-  // Initialize game state
   const gameState = {
     gameId,
     X,
@@ -140,21 +139,25 @@ app.post('/maze/create', (req, res) => {
     mazeSize,
     players: [], 
     cookies: [], 
-    traps: []   
+    traps: [],
+    gameStarted: false,
+    gameEnded: false,
+    winner: null
   };
 
   mazeGames[gameId] = gameState;
   saveMazeGames();
 
   const viewerUrl = `/maze/view/${gameId}`;
-  const player1Url = `/maze/player1/${gameId}`;
-  const player2Url = `/maze/player2/${gameId}`;
-
-  res.json({ gameId, viewerUrl, player1Url, player2Url });
+  res.json({ gameId, viewerUrl });
 });
 
 app.get('/maze/create', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'maze', 'creator.html'));
+});
+
+app.get('/maze/view/:gameId', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'maze', 'viewer.html'));
 });
 
 app.get('/maze', (req, res) => {
@@ -169,67 +172,40 @@ app.use(express.static(path.join(__dirname, 'public')));
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
 
-  // Join a specific wheel room
-  socket.on('joinWheel', (wheelId) => {
-    if (wheels[wheelId]) {
-      socket.join(wheelId);
-      console.log(`Socket ${socket.id} joined wheel ${wheelId}`);
-      // Send the currentAngle to the newly connected client
-      socket.emit('currentAngle', wheels[wheelId].currentAngle);
-    } else {
-      socket.emit('error', 'Wheel not found');
+  socket.on('joinGame', ({ gameId, player }) => {
+    if (!mazeGames[gameId]) {
+      socket.emit('error', 'Game not found');
+      return;
+    }
+    mazeGames[gameId].players.push(player);
+    socket.join(gameId);
+    io.to(gameId).emit('gameStatus', mazeGames[gameId]);
+    if (mazeGames[gameId].players.length === 2) {
+      mazeGames[gameId].gameStarted = true;
+      io.to(gameId).emit('gameStarted');
+    }
+    saveMazeGames();
+  });
+
+  socket.on('getGameStatus', gameId => {
+    if (mazeGames[gameId]) {
+      socket.emit('gameStatus', mazeGames[gameId]);
     }
   });
 
-  // Listen for 'spin' events from clients
-  socket.on('spin', (data) => {
-    const { wheelId } = data;
-    const wheel = wheels[wheelId];
-
-    if (!wheel) {
-      socket.emit('error', 'Wheel not found');
-      return;
-    }
-
-    if (wheel.isSpinning) {
-      socket.emit('error', 'Wheel is currently spinning');
-      return;
-    }
-
-    // Mark the wheel as spinning
-    wheel.isSpinning = true;
-
-    // Generate deterministic spin parameters
-    const spinData = generateSpinParameters(wheel.segments.length);
-
-    // Broadcast the spin event with spin data to all clients in the wheel room
-    io.to(wheelId).emit('spin', spinData);
-
-    // After the duration, mark the wheel as not spinning and update currentAngle
-    setTimeout(() => {
-      wheel.isSpinning = false;
-      // Update currentAngle based on spinData
-      wheel.currentAngle = (wheel.currentAngle + (spinData.spins * 2 * Math.PI) + (spinData.stopAngle * Math.PI / 180)) % (2 * Math.PI);
-      // Broadcast the updated currentAngle to all clients
-      io.to(wheelId).emit('currentAngle', wheel.currentAngle);
-      // Optionally, broadcast the result
-      io.to(wheelId).emit('spinEnded', spinData);
-    }, spinData.duration * 1000); // Convert to milliseconds
-  });
-
-  // Handle disconnections
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
   });
 });
 
+
 // Function to generate deterministic spin parameters
 function generateSpinParameters(numSegments) {
-  const spins = Math.floor(Math.random() * 3) + 5; // Random spins between 5 and 7 for smoother animation
-  const duration = 5; // 5 seconds
-  const stopSegment = Math.floor(Math.random() * numSegments) + 1; // Segment number (1-indexed)
+  const spins = Math.floor(Math.random() * 3) + 5; 
+  const duration = 5; 
+  const stopSegment = Math.floor(Math.random() * numSegments) + 1; 
   const segmentAngle = 360 / numSegments;
-  const stopAngle = 360 - ((stopSegment - 1) * segmentAngle) + (segmentAngle / 2); // Align to segment
+  const stopAngle = 360 - ((stopSegment - 1) * segmentAngle) + (segmentAngle / 2); 
 
   return {
     spins,
