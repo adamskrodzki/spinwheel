@@ -6,7 +6,7 @@ const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http, {
   cors: {
-    origin: "*", 
+    origin: "*",
     methods: ["GET", "POST"]
   }
 });
@@ -21,7 +21,7 @@ let wheels = {};
 try {
   const data = fs.readFileSync(wheelsFilePath);
   wheels = JSON.parse(data);
-  console.log("Loading spinwheels: "+JSON.stringify(wheels))
+  console.log("Loading spinwheels: " + JSON.stringify(wheels))
 } catch (err) {
   console.error('Error loading spinwheel configurations:', err);
   // If there's an error, start with an empty object
@@ -97,12 +97,12 @@ app.post('/spinwheel/create-wheel', createWheelLimiter, (req, res) => {
 // API endpoint to get wheel configuration
 app.get('/spinwheel/wheel-config/:wheelId', (req, res) => {
   const { wheelId } = req.params;
-  console.log("Fetching"+wheelId)
+  console.log("Fetching" + wheelId)
   const wheel = wheels[wheelId];
 
   if (wheel) {
-    res.json({ 
-      segments: wheel.segments, 
+    res.json({
+      segments: wheel.segments,
       colors: wheel.colors,
       currentAngle: wheel.currentAngle // Include currentAngle
     });
@@ -129,7 +129,7 @@ app.get('/spinwheel/wheel/:wheelId', (req, res) => {
 // Maze application routes
 app.post('/maze/create', (req, res) => {
   const gameId = uuidv4();
-  const { X, T, K, mazeSize } = req.body; 
+  const { X, T, K, mazeSize } = req.body;
 
   const gameState = {
     gameId,
@@ -137,8 +137,8 @@ app.post('/maze/create', (req, res) => {
     T,
     K,
     mazeSize,
-    players: [], 
-    cookies: [], 
+    players: [],
+    cookies: [],
     traps: [],
     gameStarted: false,
     gameEnded: false,
@@ -146,6 +146,10 @@ app.post('/maze/create', (req, res) => {
   };
 
   mazeGames[gameId] = gameState;
+  // Initial cookie spawning
+  for (let i = 0; i < K; i++) {
+    spawnCookie(gameState);
+  }
   saveMazeGames();
 
   const viewerUrl = `/maze/view/${gameId}`;
@@ -158,6 +162,14 @@ app.get('/maze/create', (req, res) => {
 
 app.get('/maze/view/:gameId', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'maze', 'viewer.html'));
+});
+
+app.get('/maze/player1/:gameId', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'maze', 'player.html'));
+});
+
+app.get('/maze/player2/:gameId', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'maze', 'player.html'));
 });
 
 app.get('/maze', (req, res) => {
@@ -184,6 +196,8 @@ io.on('connection', (socket) => {
       mazeGames[gameId].gameStarted = true;
       io.to(gameId).emit('gameStarted');
     }
+    const playerUrl = `/maze/player${mazeGames[gameId].players.indexOf(player) + 1}/${gameId}`;
+    socket.emit('redirect', playerUrl);
     saveMazeGames();
   });
 
@@ -201,11 +215,11 @@ io.on('connection', (socket) => {
 
 // Function to generate deterministic spin parameters
 function generateSpinParameters(numSegments) {
-  const spins = Math.floor(Math.random() * 3) + 5; 
-  const duration = 5; 
-  const stopSegment = Math.floor(Math.random() * numSegments) + 1; 
+  const spins = Math.floor(Math.random() * 3) + 5;
+  const duration = 5;
+  const stopSegment = Math.floor(Math.random() * numSegments) + 1;
   const segmentAngle = 360 / numSegments;
-  const stopAngle = 360 - ((stopSegment - 1) * segmentAngle) + (segmentAngle / 2); 
+  const stopAngle = 360 - ((stopSegment - 1) * segmentAngle) + (segmentAngle / 2);
 
   return {
     spins,
@@ -233,6 +247,14 @@ function saveMazeGames() {
   } catch (err) {
     console.error('Error saving maze game configurations:', err);
   }
+}
+
+// Helper function to spawn a cookie at a random position
+function spawnCookie(gameState) {
+  const mazeSize = gameState.mazeSize || 10; // Default maze size
+  const x = Math.floor(Math.random() * mazeSize);
+  const y = Math.floor(Math.random() * mazeSize);
+  gameState.cookies.push({ x, y });
 }
 
 // Gracefully handle server termination (e.g., Ctrl+C)
