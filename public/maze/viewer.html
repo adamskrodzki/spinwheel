@@ -14,6 +14,7 @@
   </div>
   <script>
     const gameId = window.location.pathname.split('/').pop();
+    console.log('Game ID:', gameId);
     const socket = io();
     const joinButton = document.getElementById('join-button');
     const gameStatusDiv = document.getElementById('game-status');
@@ -21,10 +22,13 @@
     const joinButtonContainer = document.getElementById('join-button-container');
 
     socket.on('connect', () => {
+      console.log('Socket connected');
       socket.emit('getGameStatus', gameId);
     });
 
     socket.on('gameStatus', (status) => {
+      console.log('Game status received:', status);
+      gameStatusDiv.textContent = `Players: ${status.players.length}, Game Started: ${status.gameStarted}, Game Ended: ${status.gameEnded}, Winner: ${status.winner}`;
       if (status.players.length < 2) {
         joinButton.style.display = 'block';
       } else {
@@ -51,16 +55,19 @@
     });
 
     joinButton.addEventListener('click', () => {
+      console.log('Join button clicked');
       socket.emit('joinGame', { gameId, player: socket.id });
       joinButtonContainer.style.display = 'none';
     });
 
     socket.on('gameEnded', (winner) => {
+      console.log('Game ended. Winner:', winner);
       mazeContainer.style.display = 'none';
       gameStatusDiv.style.display = 'block';
       gameStatusDiv.textContent = `Game ended! Winner: ${winner}`;
     });
     socket.on('redirect', (url) => {
+      console.log('Redirect received:', url);
       window.location.href = url;
     });
   </script>

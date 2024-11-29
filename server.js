@@ -130,6 +130,7 @@ app.get('/spinwheel/wheel/:wheelId', (req, res) => {
 app.post('/maze/create', (req, res) => {
   const gameId = uuidv4();
   const { X, T, K, mazeSize } = req.body;
+  console.log("Creating maze game with parameters:", { X, T, K, mazeSize });
 
   const gameState = {
     gameId,
@@ -151,6 +152,7 @@ app.post('/maze/create', (req, res) => {
     spawnCookie(gameState);
   }
   saveMazeGames();
+  console.log("Maze game created:", gameState);
 
   const viewerUrl = `/maze/view/${gameId}`;
   res.json({ gameId, viewerUrl });
@@ -182,28 +184,34 @@ io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
 
   socket.on('joinGame', ({ gameId, player }) => {
+    console.log(`Player ${player} joining game ${gameId}`);
     if (!mazeGames[gameId]) {
       socket.emit('error', 'Game not found');
+      console.error(`Game ${gameId} not found`);
       return;
     }
     mazeGames[gameId].players.push(player);
     socket.join(gameId);
     const gameStatus = mazeGames[gameId];
-    io.to(gameId).emit('gameStatus', gameStatus); // Broadcast to all in the room
+    io.to(gameId).emit('gameStatus', gameStatus);
+    console.log(`Game status broadcasted to game ${gameId}:`, gameStatus);
 
     if (gameStatus.players.length === 2) {
       gameStatus.gameStarted = true;
-      io.to(gameId).emit('gameStarted', gameStatus); // Send game state on start
+      io.to(gameId).emit('gameStarted', gameStatus);
+      console.log(`Game ${gameId} started`);
     }
     const playerNum = gameStatus.players.indexOf(player) + 1;
     const playerUrl = `/maze/player/${gameId}/${playerNum}`;
     socket.emit('redirect', playerUrl);
+    console.log(`Player ${player} redirected to ${playerUrl}`);
     saveMazeGames();
   });
 
   socket.on('getGameStatus', gameId => {
+    console.log(`Getting game status for game ${gameId}`);
     if (mazeGames[gameId]) {
-      io.to(gameId).emit('gameStatus', mazeGames[gameId]); // Broadcast to all in the room
+      io.to(gameId).emit('gameStatus', mazeGames[gameId]); 
     }
   });
 

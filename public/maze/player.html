@@ -12,11 +12,14 @@
   <script>
     const gameId = window.location.pathname.split('/').pop();
     const playerNum = window.location.pathname.includes('player1') ? 1 : 2;
+    console.log('Game ID:', gameId, 'Player Number:', playerNum);
     const socket = io();
     socket.on('connect', () => {
+      console.log('Socket connected');
       socket.emit('joinGame', { gameId, player: `player${playerNum}` });
     });
-    socket.on('gameStarted', () => {
+    socket.on('gameStarted', (gameState) => {
+      console.log('Game started:', gameState);
       document.getElementById('game-status').style.display = 'none';
       document.getElementById('maze-container').style.display = 'block';
       // Draw mock maze
@@ -30,7 +33,12 @@
       ctx.fillRect(100, 100, 100, 100); // Mock obstacle
     });
     socket.on('redirect', (url) => {
+      console.log('Redirect received:', url);
       window.location.href = url;
+    });
+    socket.on('gameStatus', (status) => {
+      console.log('Game status received:', status);
+      document.getElementById('game-status').textContent = `Players: ${status.players.length}, Game Started: ${status.gameStarted}, Game Ended: ${status.gameEnded}, Winner: ${status.winner}`;
     });
   </script>
 </body>
