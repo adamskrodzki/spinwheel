@@ -2,23 +2,27 @@
 <html>
 <head>
   <title>Maze Game Creator</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <form id="createMazeForm">
-    <label for="X">Cookies to win (X):</label>
-    <input type="number" id="X" name="X" value="10" required><br>
+  <div class="container">
+    <form id="createMazeForm">
+      <label for="X">Cookies to win (X):</label>
+      <input type="number" id="X" name="X" value="10" required><br>
 
-    <label for="T">Trap cooldown (seconds, T):</label>
-    <input type="number" id="T" name="T" value="10" required><br>
+      <label for="T">Trap cooldown (seconds, T):</label>
+      <input type="number" id="T" name="T" value="10" required><br>
 
-    <label for="K">Cookies in maze (K):</label>
-    <input type="number" id="K" name="K" value="5" required><br>
+      <label for="K">Cookies in maze (K):</label>
+      <input type="number" id="K" name="K" value="5" required><br>
 
-    <label for="mazeSize">Maze size (optional):</label>
-    <input type="number" id="mazeSize" name="mazeSize" value="10"><br>
+      <label for="mazeSize">Maze size (optional):</label>
+      <input type="number" id="mazeSize" name="mazeSize" value="10"><br>
 
-    <button type="submit">Create Maze</button>
-  </form>
+      <button type="submit">Create Maze</button>
+    </form>
+    <div id="message"></div>
+  </div>
   <script>
     document.getElementById('createMazeForm').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -33,7 +37,8 @@
       });
       const json = await response.json();
       console.log(json);
-      alert('Maze created! \nViewer URL: ' + json.viewerUrl + '\nPlayer 1 URL: ' + json.player1Url + '\nPlayer 2 URL: ' + json.player2Url);
+      const messageDiv = document.getElementById('message');
+      messageDiv.innerHTML = '<p>Maze created!</p><p>Viewer URL: <a href="' + json.viewerUrl + '">' + json.viewerUrl + '</a></p><p>Player 1 URL: <a href="' + json.player1Url + '">' + json.player1Url + '</a></p><p>Player 2 URL: <a href="' + json.player2Url + '">' + json.player2Url + '</a></p>';
     });
   </script>
 </body>

@@ -1,0 +1,80 @@
+/* General Styles */
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start; /* Start from top */
+    text-align: center;
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 20px;
+    height: 100vh; /* Full viewport height */
+    box-sizing: border-box;
+  }
+  
+  .container {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  /* Ensure consistent spacing between child elements */
+  .container > * {
+    margin-bottom: 20px; /* Space between elements */
+  }
+  
+  input[type="number"],
+  input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    font-size: 1em;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+  
+  button {
+    padding: 12px 24px;
+    font-size: 1em; 
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  
+  .error {
+    color: red;
+    margin-top: 10px;
+    font-size: 1em; 
+  }
+  
+  .success {
+    color: #2ECC71; 
+    margin-top: 10px;
+    font-size: 1.2em; 
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 600px) {
+    input[type="number"],
+    input[type="text"] {
+      font-size: 0.9em;
+    }
+    button {
+      font-size: 0.9em;
+      padding: 10px 20px;
+    }
+    .error, .success {
+      font-size: 0.9em;
+    }
+  }
