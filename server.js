@@ -183,6 +183,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
 
+  socket.on('watchMaze', ({ gameId }) =>{
+    console.log("Requested watching:"+gameId);
+    socket.join(gameId);
+    const gameStatus = mazeGames[gameId];
+    io.to(gameId).emit('gameStatus', gameStatus);
+  })
+
   socket.on('joinGame', ({ gameId, player }) => {
     console.log(`Player ${player} joining game ${gameId}`);
     if (!mazeGames[gameId]) {

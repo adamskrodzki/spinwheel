@@ -10,27 +10,21 @@
     <canvas id="mazeCanvas"></canvas>
   </div>
   <script>
-    const gameId = window.location.pathname.split('/').pop();
+    const link = window.location.pathname.split('/');
+    link.pop();
+    const gameId = link.pop();
     const playerNum = window.location.pathname.includes('player1') ? 1 : 2;
     console.log('Game ID:', gameId, 'Player Number:', playerNum);
     const socket = io();
     socket.on('connect', () => {
+      socket.emit('watchMaze', {gameId})
+      console.log("Requesting watching:"+gameId);
       console.log('Socket connected');
-      socket.emit('joinGame', { gameId, player: `player${playerNum}` });
+      socket.emit('getGameStatus', gameId);
     });
     socket.on('gameStarted', (gameState) => {
       console.log('Game started:', gameState);
-      document.getElementById('game-status').style.display = 'none';
-      document.getElementById('maze-container').style.display = 'block';
-      // Draw mock maze
-      const canvas = document.getElementById('mazeCanvas');
-      const ctx = canvas.getContext('2d');
-      canvas.width = 300;
-      canvas.height = 300;
-      ctx.fillStyle = 'lightgreen';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = 'black';
-      ctx.fillRect(100, 100, 100, 100); // Mock obstacle
+      document.getElementById('game-status').textContent = `GameStarted ,Total Players: ${gameState.players.length}, Game Started: ${gameState.gameStarted}, Game Ended: ${gameState.gameEnded}, Winner: ${gameState.winner}`;
     });
     socket.on('redirect', (url) => {
       console.log('Redirect received:', url);
@@ -38,7 +32,7 @@
     });
     socket.on('gameStatus', (status) => {
       console.log('Game status received:', status);
-      document.getElementById('game-status').textContent = `Players: ${status.players.length}, Game Started: ${status.gameStarted}, Game Ended: ${status.gameEnded}, Winner: ${status.winner}`;
+      document.getElementById('game-status').textContent = `Total Players: ${status.players.length}, Game Started: ${status.gameStarted}, Game Ended: ${status.gameEnded}, Winner: ${status.winner}`;
     });
   </script>
 </body>
