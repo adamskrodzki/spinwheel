@@ -35,7 +35,7 @@
       }
 
       // Send POST request to create a new wheel
-      fetch('/create-wheel', {
+      fetch('/spinwheel/create-wheel', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -47,7 +47,7 @@
         if (data.error) {
           document.getElementById('errorMessage').innerText = data.error;
         } else {
-          const wheelUrl = `${window.location.origin}/wheel/${data.wheelId}`;
+          const wheelUrl = `${window.location.origin}/spinwheel/wheel/${data.wheelId}`;
           document.getElementById('generatedLinkContainer').innerHTML = `
             <p>Your wheel link:</p>
             <a href="${wheelUrl}" target="_blank">${wheelUrl}</a>

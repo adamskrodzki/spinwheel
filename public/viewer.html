@@ -23,7 +23,7 @@
 
     // Extract wheelId from URL
     const pathParts = window.location.pathname.split('/');
-    const wheelId = pathParts[pathParts.length - 1];
+    const wheelId = pathParts[pathParts.length - 2]; // Adjust index to account for /spinwheel/wheel
 
     // Join the wheel room
     socket.emit('joinWheel', wheelId);
@@ -34,7 +34,7 @@
     });
 
     // Fetch wheel configuration
-    fetch(`/wheel-config/${wheelId}`)
+    fetch(`/spinwheel/wheel-config/${wheelId}`)
       .then(response => response.json())
       .then(data => {
         if (data.error) {
