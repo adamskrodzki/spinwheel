@@ -51,7 +51,7 @@ const predefinedColors = [
 ];
 
 // API endpoint to create a new wheel
-app.post('/create-wheel', createWheelLimiter, (req, res) => {
+app.post('/spinwheel/create-wheel', createWheelLimiter, (req, res) => {
   let { segments } = req.body;
 
   if (!segments || !Array.isArray(segments) || segments.length < 2) {
@@ -79,7 +79,7 @@ app.post('/create-wheel', createWheelLimiter, (req, res) => {
 });
 
 // API endpoint to get wheel configuration
-app.get('/wheel-config/:wheelId', (req, res) => {
+app.get('/spinwheel/wheel-config/:wheelId', (req, res) => {
   const { wheelId } = req.params;
   const wheel = wheels[wheelId];
 
@@ -95,12 +95,12 @@ app.get('/wheel-config/:wheelId', (req, res) => {
 });
 
 // Serve the creator page
-app.get('/create', (req, res) => {
+app.get('/spinwheel/create', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'creator.html'));
 });
 
 // Serve the viewer page
-app.get('/wheel/:wheelId', (req, res) => {
+app.get('/spinwheel/wheel/:wheelId', (req, res) => {
   const { wheelId } = req.params;
   if (wheels[wheelId]) {
     res.sendFile(path.join(__dirname, 'public', 'viewer.html'));
@@ -108,6 +108,12 @@ app.get('/wheel/:wheelId', (req, res) => {
     res.status(404).send('Wheel not found');
   }
 });
+
+// Maze application routes (skeleton)
+app.get('/maze', (req, res) => {
+  res.send('Maze application coming soon!');
+});
+
 
 // Serve other static files (CSS, JS)
 app.use(express.static(path.join(__dirname, 'public')));
