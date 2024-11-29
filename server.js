@@ -111,7 +111,33 @@ app.get('/spinwheel/wheel/:wheelId', (req, res) => {
   }
 });
 
-// Maze application routes (skeleton)
+// Maze application routes
+app.post('/maze/create', (req, res) => {
+  const gameId = uuidv4();
+  const { X, T, K, mazeSize } = req.body; // Get game parameters from request body
+
+  // Initialize game state (replace with actual maze generation logic)
+  const gameState = {
+    gameId,
+    X,
+    T,
+    K,
+    mazeSize,
+    players: [], // Array to store player information
+    cookies: [], // Array to store cookie positions
+    traps: []   // Array to store trap positions
+  };
+
+  // Store game state (replace with persistent storage if needed)
+  // ...
+
+  const viewerUrl = `/maze/view/${gameId}`;
+  const player1Url = `/maze/player1/${gameId}`;
+  const player2Url = `/maze/player2/${gameId}`;
+
+  res.json({ gameId, viewerUrl, player1Url, player2Url });
+});
+
 app.get('/maze', (req, res) => {
   res.send('Maze application coming soon!');
 });
