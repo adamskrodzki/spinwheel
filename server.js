@@ -13,7 +13,7 @@ const io = require('socket.io')(http, {
 const path = require('path');
 const fs = require('fs');
 
-// Path to the persistent storage file
+// Path to the persistent storage file for spinwheel
 const wheelsFilePath = path.join(__dirname, 'public', 'spinwheel', 'wheels.json');
 
 // Load wheel configurations from persistent storage
@@ -21,11 +21,26 @@ let wheels = {};
 try {
   const data = fs.readFileSync(wheelsFilePath);
   wheels = JSON.parse(data);
-  console.log("Loading: "+JSON.stringify(wheels))
+  console.log("Loading spinwheels: "+JSON.stringify(wheels))
 } catch (err) {
-  console.error('Error loading wheel configurations:', err);
+  console.error('Error loading spinwheel configurations:', err);
   // If there's an error, start with an empty object
 }
+
+// Path to the persistent storage file for maze games
+const mazeGamesFilePath = path.join(__dirname, 'public', 'maze', 'games.json');
+
+// Load maze game configurations from persistent storage
+let mazeGames = {};
+try {
+  const data = fs.readFileSync(mazeGamesFilePath);
+  mazeGames = JSON.parse(data);
+  console.log("Loading maze games: " + JSON.stringify(mazeGames));
+} catch (err) {
+  console.error('Error loading maze game configurations:', err);
+  // If there's an error, start with an empty object
+}
+
 
 // Middleware to parse JSON bodies
 app.use(express.json());
@@ -116,26 +131,30 @@ app.post('/maze/create', (req, res) => {
   const gameId = uuidv4();
   const { X, T, K, mazeSize } = req.body; // Get game parameters from request body
 
-  // Initialize game state (replace with actual maze generation logic)
+  // Initialize game state
   const gameState = {
     gameId,
     X,
     T,
     K,
     mazeSize,
-    players: [], // Array to store player information
-    cookies: [], // Array to store cookie positions
-    traps: []   // Array to store trap positions
+    players: [], 
+    cookies: [], 
+    traps: []   
   };
 
-  // Store game state (replace with persistent storage if needed)
-  // ...
+  mazeGames[gameId] = gameState;
+  saveMazeGames();
 
   const viewerUrl = `/maze/view/${gameId}`;
   const player1Url = `/maze/player1/${gameId}`;
   const player2Url = `/maze/player2/${gameId}`;
 
   res.json({ gameId, viewerUrl, player1Url, player2Url });
+});
+
+app.get('/maze/create', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'maze', 'creator.html'));
 });
 
 app.get('/maze', (req, res) => {
@@ -230,10 +249,21 @@ function saveWheels() {
   }
 }
 
+// Function to save the maze games object to persistent storage
+function saveMazeGames() {
+  try {
+    const data = JSON.stringify(mazeGames);
+    fs.writeFileSync(mazeGamesFilePath, data);
+  } catch (err) {
+    console.error('Error saving maze game configurations:', err);
+  }
+}
+
 // Gracefully handle server termination (e.g., Ctrl+C)
 process.on('SIGINT', () => {
   console.log('Shutting down server...');
   saveWheels();
+  saveMazeGames();
   process.exit();
 });
 
