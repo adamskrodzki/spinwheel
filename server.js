@@ -164,13 +164,10 @@ app.get('/maze/view/:gameId', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'maze', 'viewer.html'));
 });
 
-app.get('/maze/player1/:gameId', (req, res) => {
+app.get('/maze/player/:gameId/:player', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'maze', 'player.html'));
 });
 
-app.get('/maze/player2/:gameId', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'maze', 'player.html'));
-});
 
 app.get('/maze', (req, res) => {
   res.send('Maze application coming soon!');
@@ -191,19 +188,22 @@ io.on('connection', (socket) => {
     }
     mazeGames[gameId].players.push(player);
     socket.join(gameId);
-    io.to(gameId).emit('gameStatus', mazeGames[gameId]);
-    if (mazeGames[gameId].players.length === 2) {
-      mazeGames[gameId].gameStarted = true;
-      io.to(gameId).emit('gameStarted');
+    const gameStatus = mazeGames[gameId];
+    io.to(gameId).emit('gameStatus', gameStatus); // Broadcast to all in the room
+
+    if (gameStatus.players.length === 2) {
+      gameStatus.gameStarted = true;
+      io.to(gameId).emit('gameStarted', gameStatus); // Send game state on start
     }
-    const playerUrl = `/maze/player${mazeGames[gameId].players.indexOf(player) + 1}/${gameId}`;
+    const playerNum = gameStatus.players.indexOf(player) + 1;
+    const playerUrl = `/maze/player/${gameId}/${playerNum}`;
     socket.emit('redirect', playerUrl);
     saveMazeGames();
   });
 
   socket.on('getGameStatus', gameId => {
     if (mazeGames[gameId]) {
-      socket.emit('gameStatus', mazeGames[gameId]);
+      io.to(gameId).emit('gameStatus', mazeGames[gameId]); // Broadcast to all in the room
     }
   });
 
