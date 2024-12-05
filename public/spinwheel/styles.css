@@ -51,6 +51,23 @@ body {
     max-height: 500px;
     margin: 40px auto; /* Center the container */
   }
+
+  #logo-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20%; /* Adjust size as needed */
+    height: 20%; /* Adjust size as needed */
+    pointer-events: none; /* This ensures clicks pass through to the wheel */
+    z-index: 1;
+  }
+
+  #wheel-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
   
   #wheelCanvas {
     width: 100%;
