@@ -17,24 +17,23 @@ function setupMazeRoutes(app, mazeManager) {
   // Create a new game instance
   app.post('/maze/create', createGameLimiter, (req, res) => {
     const config = {
-      cookiesToWin: parseInt(req.body.cookiesToWin) || 10,
-      trapCooldown: parseInt(req.body.trapCooldown) || 10,
-      activeCookies: parseInt(req.body.activeCookies) || 5,
-      mazeSize: parseInt(req.body.mazeSize) || 15,
-      lives: parseInt(req.body.lives) || 3,
-      viewRadius: parseInt(req.body.viewRadius) || 5
+        cookiesToWin: parseInt(req.body.cookiesToWin) || 10,
+        trapCooldown: parseInt(req.body.trapCooldown) || 10,
+        activeCookies: parseInt(req.body.activeCookies) || 5,
+        mazeSize: parseInt(req.body.mazeSize) || 15,
+        lives: parseInt(req.body.lives) || 3,
+        viewRadius: parseInt(req.body.viewRadius) || 5
     };
 
     const gameId = mazeManager.createGame(config);
     res.json({
-      gameId,
-      urls: {
-        viewer: `/maze/view/${gameId}`,
-        player1: `/maze/player1/${gameId}`,
-        player2: `/maze/player2/${gameId}`
-      }
+        gameId,
+        urls: {
+            viewer: `/maze/view/${gameId}`,
+            play: `/maze/player/${gameId}` // Updated to use unified play link
+        }
     });
-  });
+});
 
   // Get game configuration
   app.get('/maze/game-config/:gameId', (req, res) => {
@@ -62,8 +61,8 @@ function setupMazeRoutes(app, mazeManager) {
     }
   });
 
-  // Serve player pages
-  app.get('/maze/player1/:gameId', (req, res) => {
+  // Serve the unified player page
+  app.get('/maze/player/:gameId', (req, res) => {
     const { gameId } = req.params;
     if (mazeManager.getGame(gameId)) {
       res.sendFile(path.join(__dirname, '..', 'player.html'));
@@ -72,14 +71,6 @@ function setupMazeRoutes(app, mazeManager) {
     }
   });
 
-  app.get('/maze/player2/:gameId', (req, res) => {
-    const { gameId } = req.params;
-    if (mazeManager.getGame(gameId)) {
-      res.sendFile(path.join(__dirname, '..', 'player.html'));
-    } else {
-      res.status(404).send('Game not found');
-    }
-  });
 }
 
 module.exports = setupMazeRoutes;

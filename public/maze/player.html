@@ -48,14 +48,20 @@
     let gameState = null;
     let canvas = document.getElementById('gameCanvas');
     let ctx = canvas.getContext('2d');
+    let playerId = null;
     
     // Join game
-    socket.emit('join_game', { gameId });
+    socket.emit('join_game', { 
+      gameId,
+      role: 'player'
+    });
 
-    // Listen for play link
-    socket.on('play_link', (link) => {
-      // Redirect to play link
-      window.location.href = link;
+    // Listen for player assignment
+    socket.on('player_assigned', (data) => {
+      playerId = data.playerId;
+      if (data.playerNumber) {
+        document.querySelector('.waiting-message h2').textContent = `You are Player ${data.playerNumber}`;
+      }
     });
 
     // Listen for game state updates

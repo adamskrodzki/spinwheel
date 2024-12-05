@@ -4,6 +4,42 @@
   <title>Cookie Heist Maze - Viewer</title>
   <link rel="stylesheet" href="styles.css">
   <script src="/socket.io/socket.io.js"></script>
+  <style>
+    .join-section {
+      text-align: center;
+      padding: 20px 0;
+      background: rgba(255, 255, 255, 0.9);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .join-button {
+      display: inline-block;
+      padding: 15px 40px;
+      font-size: 24px;
+      font-weight: bold;
+      text-decoration: none;
+      color: white;
+      background-color: #4CAF50;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .join-button:hover {
+      background-color: #45a049;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .game-container {
+      padding-top: 100px; /* Make space for fixed join-section */
+    }
+  </style>
 </head>
 <body>
   <div class="game-container">
@@ -28,11 +64,7 @@
     </div>
     
     <div id="join-section">
-      <h3>Join as Player</h3>
-      <div class="join-buttons">
-        <a id="player1-link" class="join-button" target="_blank">Join as Player 1</a>
-        <a id="player2-link" class="join-button" target="_blank">Join as Player 2</a>
-      </div>
+      <a id="player-link" class="join-button" target="_blank">Play Game</a>
     </div>
   </div>
 
@@ -46,8 +78,7 @@
 
     // Set up player links
     const baseUrl = window.location.origin;
-    document.getElementById('player1-link').href = `${baseUrl}/maze/player1/${gameId}`;
-    document.getElementById('player2-link').href = `${baseUrl}/maze/player2/${gameId}`;
+    document.getElementById('player-link').href = `${baseUrl}/maze/player/${gameId}`;
 
     // Connect to game
     socket.on('connect', () => {
@@ -65,9 +96,18 @@
     });
 
     socket.on('player_joined', ({ gameState: state }) => {
+      updateGameState(state);
+    });
+
+    socket.on('error', (error) => {
+      console.error('Socket error:', error);
+      alert(error.message);
+    });
+
+    function updateGameState(state) {
       gameState = state;
       updateUI();
-    });
+    }
 
     function updateUI() {
       const statusElem = document.getElementById('game-status');

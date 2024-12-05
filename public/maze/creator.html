@@ -35,10 +35,6 @@
         <h3>Viewer Link (Share this!):</h3>
         <a id="viewerLink" href="" target="_blank"></a>
       </div>
-      <div class="link-box">
-        <h3>Play Link:</h3>
-        <a id="playLink" href="" target="_blank"></a>
-      </div>
     </div>
   </div>
   <script>
@@ -67,13 +63,9 @@
         document.getElementById('links').style.display = 'block';
         
         const viewerLink = document.getElementById('viewerLink');
-        const playLink = document.getElementById('playLink');
         
         viewerLink.href = baseUrl + json.urls.viewer;
         viewerLink.textContent = json.urls.viewer;
-        
-        playLink.href = baseUrl + json.urls.play;
-        playLink.textContent = json.urls.play;
       } catch (error) {
         document.getElementById('message').innerHTML = 
           `<p class="error">Error creating game: ${error.message}</p>`;
