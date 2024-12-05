@@ -5,7 +5,7 @@ const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http, {
   cors: {
-    origin: "*",
+    origin: "spinwheel-qwbu.onrender.com",
     methods: ["GET", "POST"]
   }
 });
@@ -16,6 +16,7 @@ const setupSocketHandlers = require('./public/spinwheel/server/socket');
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public', 'assets')));
 
 const wheelsFilePath = path.join(__dirname, 'public', 'spinwheel', 'wheels.json');
 const wheelManager = new WheelManager(io, wheelsFilePath, fs);
