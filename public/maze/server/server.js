@@ -86,29 +86,61 @@ class MazeManager {
     }
 
     generateMaze(size) {
-        // Simple maze generation for now - we can improve this later
-        const maze = Array(size).fill().map(() => Array(size).fill(1));
-        
-        // Create a border path
-        for (let i = 0; i < size; i++) {
-            maze[1][i] = 0; // Top path
-            maze[size-2][i] = 0; // Bottom path
-            maze[i][1] = 0; // Left path
-            maze[i][size-2] = 0; // Right path
-        }
+        const maze = Array.from({ length: size }, () => Array(size).fill(1)); // 1 = Wall, 0 = Path
 
-        // Add some random paths
-        for (let i = 2; i < size-2; i++) {
-            for (let j = 2; j < size-2; j++) {
-                if (Math.random() < 0.7) {
-                    maze[i][j] = 0;
+        const directions = [
+            { dr: -2, dc: 0 }, // Up
+            { dr: 2, dc: 0 },  // Down
+            { dr: 0, dc: -2 }, // Left
+            { dr: 0, dc: 2 }   // Right
+        ];
+
+        const carvePath = (r, c) => {
+            maze[r][c] = 0; // Mark as path
+            
+            // Shuffle directions randomly
+            const shuffledDirections = [...directions]
+                .sort(() => Math.random() - 0.5);
+
+            for (const { dr, dc } of shuffledDirections) {
+                const nr = r + dr, nc = c + dc; // Neighbor cell
+                if (nr > 0 && nr < size - 1 && nc > 0 && nc < size - 1 && maze[nr][nc] === 1) {
+                    maze[r + dr/2][c + dc/2] = 0; // Remove wall between cells
+                    carvePath(nr, nc); // Recursive call
                 }
             }
-        }
+        };
+
+        // Start carving from (1, 1)
+        carvePath(1, 1);
 
         // Ensure starting positions are clear
         maze[1][1] = 0; // Player 1 start
         maze[size-2][size-2] = 0; // Player 2 start
+
+        // Ensure there's a path between start and end
+        let currentRow = 1;
+        let currentCol = 1;
+        while (currentRow < size - 2 || currentCol < size - 2) {
+            if (currentRow < size - 2) {
+                maze[currentRow + 1][currentCol] = 0;
+                currentRow++;
+            }
+            if (currentCol < size - 2) {
+                maze[currentRow][currentCol + 1] = 0;
+                currentCol++;
+            }
+        }
+
+        // Add some random shortcuts
+        const numShortcuts = Math.floor(size / 4);
+        for (let i = 0; i < numShortcuts; i++) {
+            const r = Math.floor(Math.random() * (size - 4)) + 2;
+            const c = Math.floor(Math.random() * (size - 4)) + 2;
+            maze[r][c] = 0;
+            maze[r+1][c] = 0;
+            maze[r][c+1] = 0;
+        }
 
         return maze;
     }
