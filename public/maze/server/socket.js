@@ -4,8 +4,9 @@ function setupMazeSocketHandlers(io, mazeManager) {
     mazeNamespace.on('connection', (socket) => {
         let currentGame = null;
         let playerId = socket.id;
+        let role = null;
 
-        socket.on('join_game', ({ gameId, role }) => {
+        socket.on('join_game', ({ gameId }) => {
             const game = mazeManager.getGame(gameId);
             if (!game) {
                 socket.emit('error', { message: 'Game not found' });
@@ -14,18 +15,23 @@ function setupMazeSocketHandlers(io, mazeManager) {
 
             socket.join(`game:${gameId}`);
 
-            if (role === 'viewer') {
-                // Send full game state to viewer
-                socket.emit('game_state', game);
-            } else {
-                // Handle player join
+            // Determine player role based on connection
+            if (game.players.length < 2) {
+                role = game.players.length === 0 ? 'player1' : 'player2';
                 const player = mazeManager.addPlayer(gameId, playerId);
                 if (player) {
                     currentGame = game;
                     mazeNamespace.to(`game:${gameId}`).emit('game_state', game);
+                    if (game.players.length === 2) {
+                        // Emit single play link for both players
+                        const playLink = `/maze/player/${gameId}`;
+                        mazeNamespace.to(`game:${gameId}`).emit('play_link', playLink);
+                    }
                 } else {
                     socket.emit('error', { message: 'Could not join game' });
                 }
+            } else {
+                socket.emit('error', { message: 'Game is full' });
             }
         });
 

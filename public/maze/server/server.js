@@ -48,6 +48,8 @@ class MazeManager {
     createGame(config = {}) {
         const gameId = uuidv4();
         const gameConfig = { ...this.defaultConfig, ...config };
+
+        console.log(`Created game ${gameId} with config:`, gameConfig);
         
         const game = {
             id: gameId,

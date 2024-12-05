@@ -1,92 +1,227 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Cookie Heist Maze - Create Game</title>
+  <title>Cookie Heist Maze - Player View</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="container">
-    <h1>Create Cookie Heist Game</h1>
-    <form id="createMazeForm">
-      <label for="cookiesToWin">Cookies to win:</label>
-      <input type="number" id="cookiesToWin" name="cookiesToWin" value="10" min="1" required><br>
-
-      <label for="trapCooldown">Trap cooldown (seconds):</label>
-      <input type="number" id="trapCooldown" name="trapCooldown" value="10" min="5" required><br>
-
-      <label for="activeCookies">Active cookies in maze:</label>
-      <input type="number" id="activeCookies" name="activeCookies" value="5" min="1" required><br>
-
-      <label for="mazeSize">Maze size:</label>
-      <input type="number" id="mazeSize" name="mazeSize" value="15" min="10" max="30"><br>
-
-      <label for="lives">Player lives:</label>
-      <input type="number" id="lives" name="lives" value="3" min="1" required><br>
-
-      <label for="viewRadius">View radius:</label>
-      <input type="number" id="viewRadius" name="viewRadius" value="5" min="3" required><br>
-
-      <button type="submit">Create Game</button>
-    </form>
-    <div id="message"></div>
-    <div id="links" style="display: none;">
-      <h2>Game Created!</h2>
-      <div class="link-box">
-        <h3>Viewer Link (Share this!):</h3>
-        <a id="viewerLink" href="" target="_blank"></a>
+    <!-- Waiting Screen -->
+    <div id="waitingScreen">
+      <h1>Cookie Heist Maze</h1>
+      <div class="waiting-message">
+        <h2>Waiting for other player to join...</h2>
+        <div class="spinner"></div>
       </div>
-      <div class="link-box">
-        <h3>Player 1 Link:</h3>
-        <a id="player1Link" href="" target="_blank"></a>
+    </div>
+
+    <!-- Game Screen (hidden initially) -->
+    <div id="gameScreen" style="display: none;">
+      <div class="game-header">
+        <div class="player-stats">
+          <span>Lives: <span id="playerLives">3</span></span>
+          <span>Score: <span id="playerScore">0</span></span>
+          <span>Trap Cooldown: <span id="trapCooldown">Ready</span></span>
+        </div>
       </div>
-      <div class="link-box">
-        <h3>Player 2 Link:</h3>
-        <a id="player2Link" href="" target="_blank"></a>
+
+      <div class="game-container">
+        <canvas id="gameCanvas"></canvas>
+      </div>
+
+      <div class="game-controls">
+        <div class="controls-info">
+          <p>Move: Arrow Keys or WASD</p>
+          <p>Place Trap: Space Bar</p>
+        </div>
       </div>
     </div>
   </div>
+
+  <script src="/socket.io/socket.io.js"></script>
   <script>
-    document.getElementById('createMazeForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      const data = Object.fromEntries(formData.entries());
-      
-      try {
-        const response = await fetch('/maze/create', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(data)
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to create game');
-        }
-        
-        const json = await response.json();
-        const baseUrl = window.location.origin;
-        
-        document.getElementById('createMazeForm').style.display = 'none';
-        document.getElementById('links').style.display = 'block';
-        
-        const viewerLink = document.getElementById('viewerLink');
-        const player1Link = document.getElementById('player1Link');
-        const player2Link = document.getElementById('player2Link');
-        
-        viewerLink.href = baseUrl + json.urls.viewer;
-        viewerLink.textContent = json.urls.viewer;
-        
-        player1Link.href = baseUrl + json.urls.player1;
-        player1Link.textContent = json.urls.player1;
-        
-        player2Link.href = baseUrl + json.urls.player2;
-        player2Link.textContent = json.urls.player2;
-      } catch (error) {
-        document.getElementById('message').innerHTML = 
-          `<p class="error">Error creating game: ${error.message}</p>`;
+    // Connect to maze namespace
+    const socket = io('/maze');
+    const gameId = window.location.pathname.split('/').pop();
+    
+    // Game state
+    let gameState = null;
+    let canvas = document.getElementById('gameCanvas');
+    let ctx = canvas.getContext('2d');
+    
+    // Join game
+    socket.emit('join_game', { gameId });
+
+    // Listen for play link
+    socket.on('play_link', (link) => {
+      // Redirect to play link
+      window.location.href = link;
+    });
+
+    // Listen for game state updates
+    socket.on('game_state', (state) => {
+      gameState = state;
+      if (state.state === 'playing') {
+        document.getElementById('waitingScreen').style.display = 'none';
+        document.getElementById('gameScreen').style.display = 'block';
+      }
+      updateGame(state);
+    });
+
+    // Listen for errors
+    socket.on('error', (error) => {
+      alert(error.message);
+      window.location.href = '/maze/create';
+    });
+
+    // Listen for game over
+    socket.on('game_over', (result) => {
+      alert(result.message);
+      window.location.href = '/maze/create';
+    });
+
+    // Handle keyboard input
+    document.addEventListener('keydown', (e) => {
+      if (!gameState || gameState.state !== 'playing') return;
+
+      let direction = null;
+      switch(e.key) {
+        case 'ArrowUp':
+        case 'w':
+        case 'W':
+          direction = 'up';
+          break;
+        case 'ArrowDown':
+        case 's':
+        case 'S':
+          direction = 'down';
+          break;
+        case 'ArrowLeft':
+        case 'a':
+        case 'A':
+          direction = 'left';
+          break;
+        case 'ArrowRight':
+        case 'd':
+        case 'D':
+          direction = 'right';
+          break;
+        case ' ':
+          socket.emit('place_trap', { gameId });
+          break;
+      }
+
+      if (direction) {
+        socket.emit('move', { gameId, direction });
       }
     });
+
+    function updateGame(state) {
+      const player = state.players.find(p => 
+        p.id === socket.id
+      );
+      
+      if (!player) return;
+
+      // Update HUD
+      document.getElementById('playerLives').textContent = player.lives;
+      document.getElementById('playerScore').textContent = player.score;
+      
+      // Update trap cooldown
+      const now = Date.now();
+      const cooldownRemaining = Math.max(0, 
+        (player.lastTrapTime + state.config.trapCooldown * 1000 - now) / 1000
+      );
+      document.getElementById('trapCooldown').textContent = 
+        cooldownRemaining > 0 ? `${cooldownRemaining.toFixed(1)}s` : 'Ready';
+
+      // Render game state with fog of war
+      renderGame(state, player);
+    }
+
+    function renderGame(state, player) {
+      const cellSize = 30;
+      const viewRadius = state.config.viewRadius;
+      
+      // Set canvas size
+      canvas.width = state.config.mazeSize * cellSize;
+      canvas.height = state.config.mazeSize * cellSize;
+      
+      // Clear canvas
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Calculate visible area
+      const visibleCells = new Set();
+      for (let dy = -viewRadius; dy <= viewRadius; dy++) {
+        for (let dx = -viewRadius; dx <= viewRadius; dx++) {
+          const x = player.position.x + dx;
+          const y = player.position.y + dy;
+          if (x >= 0 && x < state.config.mazeSize && 
+              y >= 0 && y < state.config.mazeSize) {
+            visibleCells.add(`${x},${y}`);
+          }
+        }
+      }
+
+      // Draw visible maze cells
+      for (let y = 0; y < state.config.mazeSize; y++) {
+        for (let x = 0; x < state.config.mazeSize; x++) {
+          if (!visibleCells.has(`${x},${y}`)) continue;
+
+          const cell = state.maze[y][x];
+          ctx.fillStyle = cell === 1 ? '#666' : '#fff';
+          ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+        }
+      }
+
+      // Draw visible cookies
+      state.cookies.forEach(cookie => {
+        if (!visibleCells.has(`${cookie.x},${cookie.y}`)) return;
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath();
+        ctx.arc(
+          (cookie.x + 0.5) * cellSize,
+          (cookie.y + 0.5) * cellSize,
+          cellSize / 3,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+      });
+
+      // Draw visible trap cookies
+      state.trapCookies.forEach(trap => {
+        if (!visibleCells.has(`${trap.x},${trap.y}`)) return;
+        const now = Date.now();
+        const isGlowing = now - trap.placedTime < 3000;
+        ctx.fillStyle = isGlowing ? '#FF4444' : '#FFD700';
+        ctx.beginPath();
+        ctx.arc(
+          (trap.x + 0.5) * cellSize,
+          (trap.y + 0.5) * cellSize,
+          cellSize / 3,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+      });
+
+      // Draw visible players
+      state.players.forEach(p => {
+        if (!visibleCells.has(`${p.position.x},${p.position.y}`)) return;
+        ctx.fillStyle = p.id === 'player1' ? '#4CAF50' : '#2196F3';
+        ctx.beginPath();
+        ctx.arc(
+          (p.position.x + 0.5) * cellSize,
+          (p.position.y + 0.5) * cellSize,
+          cellSize / 2.5,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+      });
+    }
   </script>
 </body>
 </html>

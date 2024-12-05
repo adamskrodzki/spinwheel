@@ -2,3 +2,4 @@
 node_modules/
 .env
 wheels.json
+public/maze/games.json
