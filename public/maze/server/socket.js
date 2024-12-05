@@ -3,44 +3,59 @@ function setupMazeSocketHandlers(io, mazeManager) {
 
     mazeNamespace.on('connection', (socket) => {
         let currentGame = null;
-        let playerId = null;
+        let playerId = socket.id;
 
         socket.on('join_game', ({ gameId, role }) => {
+            const game = mazeManager.getGame(gameId);
+            if (!game) {
+                socket.emit('error', { message: 'Game not found' });
+                return;
+            }
+
+            socket.join(`game:${gameId}`);
+
             if (role === 'viewer') {
-                socket.join(`game:${gameId}`);
                 // Send full game state to viewer
-                const game = mazeManager.games.get(gameId);
-                if (game) {
-                    socket.emit('game_state', game);
-                }
+                socket.emit('game_state', game);
             } else {
                 // Handle player join
-                playerId = socket.id;
-                currentGame = mazeManager.joinGame(gameId, playerId);
-                if (currentGame) {
-                    socket.join(`game:${gameId}`);
-                    mazeNamespace.to(`game:${gameId}`).emit('player_joined', {
-                        playerId,
-                        gameState: currentGame
-                    });
+                const player = mazeManager.addPlayer(gameId, playerId);
+                if (player) {
+                    currentGame = game;
+                    mazeNamespace.to(`game:${gameId}`).emit('game_state', game);
+                } else {
+                    socket.emit('error', { message: 'Could not join game' });
                 }
             }
         });
 
         socket.on('move', ({ direction }) => {
             if (!currentGame || !playerId) return;
-            // TODO: Implement movement logic
+
+            if (mazeManager.movePlayer(currentGame.id, playerId, direction)) {
+                mazeNamespace.to(`game:${currentGame.id}`).emit('game_state', currentGame);
+            }
         });
 
         socket.on('place_trap', () => {
             if (!currentGame || !playerId) return;
-            // TODO: Implement trap placement logic
+
+            if (mazeManager.placeTrap(currentGame.id, playerId)) {
+                mazeNamespace.to(`game:${currentGame.id}`).emit('game_state', currentGame);
+            }
         });
 
         socket.on('disconnect', () => {
-            // Handle player disconnect
             if (currentGame && playerId) {
-                // TODO: Implement disconnect logic
+                const player = currentGame.players.find(p => p.id === playerId);
+                if (player) {
+                    // Handle player disconnect
+                    currentGame.players = currentGame.players.filter(p => p.id !== playerId);
+                    if (currentGame.state === 'playing') {
+                        currentGame.state = 'finished';
+                    }
+                    mazeNamespace.to(`game:${currentGame.id}`).emit('game_state', currentGame);
+                }
             }
         });
     });

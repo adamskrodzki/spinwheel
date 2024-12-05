@@ -22,9 +22,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'public', 'assets')));
 
 const wheelsFilePath = path.join(__dirname, 'public', 'spinwheel', 'wheels.json');
-const wheelManager = new WheelManager(io, wheelsFilePath, fs);
+const gamesFilePath = path.join(__dirname, 'public', 'maze', 'games.json');
 
-const mazeManager = new MazeManager(io);
+const wheelManager = new WheelManager(io, wheelsFilePath, fs);
+const mazeManager = new MazeManager(io, gamesFilePath, fs);
+
+// Clean up old games periodically
+setInterval(() => mazeManager.cleanupOldGames(), 30 * 60 * 1000); // Every 30 minutes
 
 setupSpinwheelRoutes(app, wheelManager);
 setupSocketHandlers(io, wheelManager);
@@ -35,6 +39,7 @@ setupMazeSocketHandlers(io, mazeManager);
 process.on('SIGINT', () => {
   console.log('Shutting down server...');
   wheelManager.saveWheels();
+  mazeManager.saveGames();
   process.exit();
 });
 
