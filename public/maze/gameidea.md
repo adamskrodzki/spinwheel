@@ -90,8 +90,7 @@ Here is the full, ready-to-copy version of the specification:
      - A **join screen** allows two players to claim spots as Player 1 and Player 2.
    - After players join:
      - Spectators see the global game state.
-     - Players are redirected to their respective URLs: `/maze/player1/[gameId]` and `/maze/player2/[gameId]`.
-
+     - Players are redirected to URLs: `/maze/player/[gameId]` 
 3. **Gameplay:**
    - Players compete to collect **X cookies** while avoiding traps.
    - Spectators observe and provide hints or distractions.
