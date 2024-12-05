@@ -1,45 +1,91 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Maze Game Creator</title>
+  <title>Cookie Heist Maze - Create Game</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="container">
+    <h1>Create Cookie Heist Game</h1>
     <form id="createMazeForm">
-      <label for="X">Cookies to win (X):</label>
-      <input type="number" id="X" name="X" value="10" required><br>
+      <label for="cookiesToWin">Cookies to win:</label>
+      <input type="number" id="cookiesToWin" name="cookiesToWin" value="10" min="1" required><br>
 
-      <label for="T">Trap cooldown (seconds, T):</label>
-      <input type="number" id="T" name="T" value="10" required><br>
+      <label for="trapCooldown">Trap cooldown (seconds):</label>
+      <input type="number" id="trapCooldown" name="trapCooldown" value="10" min="5" required><br>
 
-      <label for="K">Cookies in maze (K):</label>
-      <input type="number" id="K" name="K" value="5" required><br>
+      <label for="activeCookies">Active cookies in maze:</label>
+      <input type="number" id="activeCookies" name="activeCookies" value="5" min="1" required><br>
 
-      <label for="mazeSize">Maze size (optional):</label>
-      <input type="number" id="mazeSize" name="mazeSize" value="10"><br>
+      <label for="mazeSize">Maze size:</label>
+      <input type="number" id="mazeSize" name="mazeSize" value="15" min="10" max="30"><br>
 
-      <button type="submit">Create Maze</button>
+      <label for="lives">Player lives:</label>
+      <input type="number" id="lives" name="lives" value="3" min="1" required><br>
+
+      <label for="viewRadius">View radius:</label>
+      <input type="number" id="viewRadius" name="viewRadius" value="5" min="3" required><br>
+
+      <button type="submit">Create Game</button>
     </form>
     <div id="message"></div>
+    <div id="links" style="display: none;">
+      <h2>Game Created!</h2>
+      <div class="link-box">
+        <h3>Viewer Link (Share this!):</h3>
+        <a id="viewerLink" href="" target="_blank"></a>
+      </div>
+      <div class="link-box">
+        <h3>Player 1 Link:</h3>
+        <a id="player1Link" href="" target="_blank"></a>
+      </div>
+      <div class="link-box">
+        <h3>Player 2 Link:</h3>
+        <a id="player2Link" href="" target="_blank"></a>
+      </div>
+    </div>
   </div>
   <script>
     document.getElementById('createMazeForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const formData = new FormData(e.target);
       const data = Object.fromEntries(formData.entries());
-      const response = await fetch('/maze/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-      });
-      const json = await response.json();
-      console.log(json);
-      const messageDiv = document.getElementById('message');
-      const fullViewerUrl = window.location.origin + json.viewerUrl; // Construct full URL
-      messageDiv.innerHTML = '<p>Maze created!</p><p>Viewer URL: <a href="' + fullViewerUrl + '">' + fullViewerUrl + '</a></p>';
+      
+      try {
+        const response = await fetch('/maze/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to create game');
+        }
+        
+        const json = await response.json();
+        const baseUrl = window.location.origin;
+        
+        document.getElementById('createMazeForm').style.display = 'none';
+        document.getElementById('links').style.display = 'block';
+        
+        const viewerLink = document.getElementById('viewerLink');
+        const player1Link = document.getElementById('player1Link');
+        const player2Link = document.getElementById('player2Link');
+        
+        viewerLink.href = baseUrl + json.urls.viewer;
+        viewerLink.textContent = json.urls.viewer;
+        
+        player1Link.href = baseUrl + json.urls.player1;
+        player1Link.textContent = json.urls.player1;
+        
+        player2Link.href = baseUrl + json.urls.player2;
+        player2Link.textContent = json.urls.player2;
+      } catch (error) {
+        document.getElementById('message').innerHTML = 
+          `<p class="error">Error creating game: ${error.message}</p>`;
+      }
     });
   </script>
 </body>

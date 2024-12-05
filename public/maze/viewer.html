@@ -1,86 +1,199 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Maze Game Viewer</title>
+  <title>Cookie Heist Maze - Viewer</title>
+  <link rel="stylesheet" href="styles.css">
   <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
-  <div id="game-status">Waiting for players to join...</div>
-  <div id="join-button-container">
-    <button id="join-button">Join Game</button>
+  <div class="game-container">
+    <div class="game-header">
+      <div class="player-stats">
+        <div id="player1-stats" class="player-box">
+          <h3>Player 1</h3>
+          <div>Lives: <span id="p1-lives">3</span></div>
+          <div>Score: <span id="p1-score">0</span></div>
+        </div>
+        <div id="game-status">Waiting for players...</div>
+        <div id="player2-stats" class="player-box">
+          <h3>Player 2</h3>
+          <div>Lives: <span id="p2-lives">3</span></div>
+          <div>Score: <span id="p2-score">0</span></div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="maze-container">
+      <canvas id="mazeCanvas"></canvas>
+    </div>
+    
+    <div id="join-section">
+      <h3>Join as Player</h3>
+      <div class="join-buttons">
+        <a id="player1-link" class="join-button" target="_blank">Join as Player 1</a>
+        <a id="player2-link" class="join-button" target="_blank">Join as Player 2</a>
+      </div>
+    </div>
   </div>
-  <div id="maze-container" style="display: none;">
-    <canvas id="mazeCanvas"></canvas>
-  </div>
+
   <script>
     const gameId = window.location.pathname.split('/').pop();
-    console.log('Game ID:', gameId);
-    const socket = io();
-    const joinButton = document.getElementById('join-button');
-    const gameStatusDiv = document.getElementById('game-status');
-    const mazeContainer = document.getElementById('maze-container');
-    const joinButtonContainer = document.getElementById('join-button-container');
+    const socket = io('/maze');
+    const canvas = document.getElementById('mazeCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    let gameState = null;
 
+    // Set up player links
+    const baseUrl = window.location.origin;
+    document.getElementById('player1-link').href = `${baseUrl}/maze/player1/${gameId}`;
+    document.getElementById('player2-link').href = `${baseUrl}/maze/player2/${gameId}`;
+
+    // Connect to game
     socket.on('connect', () => {
-      socket.emit('watchMaze', {gameId})
-      console.log("Requesting watching:"+gameId);
-      console.log('Socket connected');
-      socket.emit('getGameStatus', gameId);
+      socket.emit('join_game', {
+        gameId,
+        role: 'viewer'
+      });
     });
 
-    socket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
+    // Game state updates
+    socket.on('game_state', (state) => {
+      gameState = state;
+      updateUI();
+      drawGame();
     });
 
-    socket.on('disconnect', (reason) => {
-      console.log('Socket disconnected:', reason);
+    socket.on('player_joined', ({ gameState: state }) => {
+      gameState = state;
+      updateUI();
     });
 
-    socket.on('gameStatus', (status) => {
-      console.log('Game status received:', status);
-      if(status.gameId !== gameId) return; 
-      gameStatusDiv.textContent = `Players: ${status.players.length}, Game Started: ${status.gameStarted}, Game Ended: ${status.gameEnded}, Winner: ${status.winner}`;
-      if (status.players.length < 2) {
-        joinButton.style.display = 'block';
-      } else {
-        joinButton.style.display = 'none';
+    function updateUI() {
+      const statusElem = document.getElementById('game-status');
+      const joinSection = document.getElementById('join-section');
+      
+      if (!gameState) {
+        statusElem.textContent = 'Connecting...';
+        return;
       }
-      if (status.players.length === 2 && status.gameStarted) {
-        gameStatusDiv.style.display = 'none';
-        mazeContainer.style.display = 'block';
-        // Draw mock maze
-        const canvas = document.getElementById('mazeCanvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = 300;
-        canvas.height = 300;
-        ctx.fillStyle = 'lightgreen';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = 'black';
-        ctx.fillRect(100, 100, 100, 100); // Mock obstacle
-      } else if (status.players.length === 2 && !status.gameStarted) {
-        gameStatusDiv.textContent = 'Waiting for game to start...';
-      } else if (status.gameEnded) {
-        gameStatusDiv.textContent = `Game ended! Winner: ${status.winner}`;
-        joinButton.style.display = 'none';
+
+      // Update player stats
+      if (gameState.players[0]) {
+        document.getElementById('p1-lives').textContent = gameState.players[0].lives;
+        document.getElementById('p1-score').textContent = gameState.players[0].score;
+        document.getElementById('player1-link').style.display = 'none';
+      }
+      
+      if (gameState.players[1]) {
+        document.getElementById('p2-lives').textContent = gameState.players[1].lives;
+        document.getElementById('p2-score').textContent = gameState.players[1].score;
+        document.getElementById('player2-link').style.display = 'none';
+      }
+
+      // Update game status
+      switch(gameState.state) {
+        case 'waiting':
+          statusElem.textContent = `Waiting for players... (${gameState.players.length}/2)`;
+          joinSection.style.display = gameState.players.length < 2 ? 'block' : 'none';
+          break;
+        case 'playing':
+          statusElem.textContent = 'Game in progress';
+          joinSection.style.display = 'none';
+          break;
+        case 'finished':
+          const winner = gameState.players.find(p => p.score >= gameState.config.cookiesToWin);
+          statusElem.textContent = winner ? 
+            `Game Over! Player ${gameState.players.indexOf(winner) + 1} wins!` :
+            'Game Over!';
+          joinSection.style.display = 'none';
+          break;
+      }
+    }
+
+    function drawGame() {
+      if (!gameState) return;
+      
+      // Set canvas size based on maze size
+      const tileSize = Math.min(
+        window.innerWidth / gameState.maze[0].length,
+        window.innerHeight / gameState.maze.length
+      );
+      canvas.width = gameState.maze[0].length * tileSize;
+      canvas.height = gameState.maze.length * tileSize;
+      
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw maze
+      for (let y = 0; y < gameState.maze.length; y++) {
+        for (let x = 0; x < gameState.maze[y].length; x++) {
+          const tile = gameState.maze[y][x];
+          ctx.fillStyle = tile === 1 ? '#333' : '#fff';
+          ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+          
+          // Draw cookies and traps
+          if (tile === 0) {
+            const cookie = gameState.cookies.find(c => c.x === x && c.y === y);
+            const trap = gameState.trapCookies.find(t => t.x === x && t.y === y);
+            
+            if (cookie) {
+              ctx.fillStyle = '#FFD700';
+              ctx.beginPath();
+              ctx.arc(
+                (x + 0.5) * tileSize,
+                (y + 0.5) * tileSize,
+                tileSize * 0.3,
+                0,
+                Math.PI * 2
+              );
+              ctx.fill();
+            } else if (trap) {
+              // Draw trap (glowing if recently placed)
+              const isGlowing = Date.now() - trap.placedTime < 3000;
+              ctx.fillStyle = isGlowing ? '#FF6B6B' : '#FFD700';
+              ctx.beginPath();
+              ctx.arc(
+                (x + 0.5) * tileSize,
+                (y + 0.5) * tileSize,
+                tileSize * 0.3,
+                0,
+                Math.PI * 2
+              );
+              ctx.fill();
+            }
+          }
+        }
+      }
+      
+      // Draw players
+      gameState.players.forEach((player, index) => {
+        ctx.fillStyle = index === 0 ? '#4CAF50' : '#F44336';
+        ctx.beginPath();
+        ctx.arc(
+          (player.position.x + 0.5) * tileSize,
+          (player.position.y + 0.5) * tileSize,
+          tileSize * 0.4,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+      });
+    }
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      if (gameState) {
+        drawGame();
       }
     });
 
-    joinButton.addEventListener('click', () => {
-      console.log('Join button clicked');
-      socket.emit('joinGame', { gameId, player: socket.id });
-      joinButtonContainer.style.display = 'none';
-    });
-
-    socket.on('gameEnded', (winner) => {
-      console.log('Game ended. Winner:', winner);
-      mazeContainer.style.display = 'none';
-      gameStatusDiv.style.display = 'block';
-      gameStatusDiv.textContent = `Game ended! Winner: ${winner}`;
-    });
-    socket.on('redirect', (url) => {
-      console.log('Redirect received:', url);
-      window.location.href = url;
-    });
+    // Start animation loop
+    function gameLoop() {
+      drawGame();
+      requestAnimationFrame(gameLoop);
+    }
+    gameLoop();
   </script>
 </body>
 </html>
