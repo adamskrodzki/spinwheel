@@ -26,12 +26,26 @@ class MazeManager {
             }
             const data = this.fs.readFileSync(this.gamesFilePath);
             const gamesObj = JSON.parse(data);
-            // Convert object to Map
-            return new Map(Object.entries(gamesObj));
+            // Convert object to Map and ensure each game has the isGameOver function
+            const games = new Map();
+            for (const [id, game] of Object.entries(gamesObj)) {
+                games.set(id, this.ensureGameMethods(game));
+            }
+            return games;
         } catch (err) {
             console.error('Error loading maze games:', err);
             return new Map();
         }
+    }
+
+    // Helper method to ensure game object has all required methods
+    ensureGameMethods(game) {
+        game.isGameOver = function() {
+            return this.state === 'finished' || 
+                   this.players.some(p => p.score >= this.config.cookiesToWin) ||
+                   this.players.some(p => p.lives <= 0);
+        };
+        return game;
     }
 
     saveGames() {
@@ -59,13 +73,11 @@ class MazeManager {
             trapCookies: [],
             state: 'waiting',
             maze: this.generateMaze(gameConfig.mazeSize),
-            createdAt: Date.now(),
-            isGameOver: function() {
-                return this.state === 'finished' || 
-                       this.players.some(p => p.score >= this.config.cookiesToWin) ||
-                       this.players.some(p => p.lives <= 0);
-            }
+            createdAt: Date.now()
         };
+
+        // Add methods to game object
+        this.ensureGameMethods(game);
 
         // Generate initial cookies after maze is created
         game.cookies = this.generateInitialCookies(game);

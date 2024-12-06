@@ -10,7 +10,7 @@ function setupMazeSocketHandlers(io, mazeManager) {
         function broadcastGameState(game) {
             if (!game) return;
             
-            // Check if game is over
+            // Check if game is over using the game's method
             if (game.isGameOver()) {
                 game.state = 'finished';
             }
@@ -85,6 +85,8 @@ function setupMazeSocketHandlers(io, mazeManager) {
 
             if (mazeManager.movePlayer(currentGame.id, playerId, direction)) {
                 broadcastGameState(currentGame);
+                
+                // Check for game over after move
                 if (currentGame.isGameOver()) {
                     mazeNamespace.to(`game:${currentGame.id}`).emit('game_over', currentGame);
                 }

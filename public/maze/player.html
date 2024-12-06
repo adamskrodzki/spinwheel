@@ -19,9 +19,20 @@
     <div id="gameScreen" style="display: none;">
       <div class="game-header">
         <div class="player-stats">
-          <span>Lives: <span id="playerLives">3</span></span>
-          <span>Score: <span id="playerScore">0</span></span>
-          <span>Trap Cooldown: <span id="trapCooldown">Ready</span></span>
+          <div class="stat-item">
+            <span>❤️ Lives:</span>
+            <span class="stat-value" id="playerLives">3</span>
+          </div>
+          <div class="stat-item">
+            <span>🍪 Score:</span>
+            <span class="stat-value" id="playerScore">0</span>
+          </div>
+          <div class="stat-item">
+            <span>⚡ Trap:</span>
+            <div class="cooldown-container">
+              <div class="cooldown-progress" id="trapCooldown" style="width: 100%"></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -85,7 +96,6 @@
 
     // Listen for game over
     socket.on('game_over', (result) => {
-      alert(result.message);
       window.location.href = `/maze/view/${gameId}`;
     });
 
@@ -126,25 +136,26 @@
     });
 
     function updateGame(state) {
+      if (!state || !playerId) return;
+      
       const player = state.players.find(p => 
         p.id === socket.id
       );
       
       if (!player) return;
 
-      // Update HUD
       document.getElementById('playerLives').textContent = player.lives;
       document.getElementById('playerScore').textContent = player.score;
       
-      // Update trap cooldown
-      const now = Date.now();
-      const cooldownRemaining = Math.max(0, 
-        (player.lastTrapTime + state.config.trapCooldown * 1000 - now) / 1000
-      );
-      document.getElementById('trapCooldown').textContent = 
-        cooldownRemaining > 0 ? `${cooldownRemaining.toFixed(1)}s` : 'Ready';
+      // Update cooldown progress bar
+      const cooldownProgress = document.getElementById('trapCooldown');
+      if (player.trapCooldown > 0) {
+        const progress = (1 - player.trapCooldown / 5000) * 100;
+        cooldownProgress.style.width = progress + '%';
+      } else {
+        cooldownProgress.style.width = '100%';
+      }
 
-      // Render game state with fog of war
       renderGame(state, player);
     }
 

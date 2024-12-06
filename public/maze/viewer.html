@@ -61,22 +61,33 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: rgba(255, 255, 255, 0.95);
-      padding: 30px;
+      background: linear-gradient(135deg, #2c3e50, #3498db);
+      color: white;
+      padding: 40px;
       border-radius: 15px;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
       text-align: center;
       z-index: 1000;
+      min-width: 300px;
     }
 
-    .winner-animation {
-      animation: celebrate 1s ease-in-out infinite;
+    .winner {
+      font-size: 2.5em;
+      font-weight: bold;
+      margin: 20px 0;
+      color: #2ecc71;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
     }
 
-    @keyframes celebrate {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.1); }
-      100% { transform: scale(1); }
+    .loser {
+      font-size: 1.2em;
+      opacity: 0.8;
+      margin: 10px 0;
+    }
+
+    .final-scores {
+      margin-top: 20px;
+      font-size: 1.1em;
     }
 
     .stats-table {
@@ -281,24 +292,27 @@
       const gameOverDiv = document.createElement('div');
       gameOverDiv.className = 'game-over';
       
-      const winner = gameState.players.find(p => p.score >= gameState.config.cookiesToWin || 
-          gameState.players.find(op => op.id !== p.id && op.lives <= 0));
+      const winner = gameState.players.reduce((prev, current) => 
+        (prev.score > current.score) ? prev : current
+      );
       
-      const gameOverHTML = `
-          <h2 class="winner-animation">${winner ? 'Winner!' : 'Game Over!'}</h2>
-          <div class="stats-table">
-              ${gameState.players.map(p => `
-                  <div>
-                      Player ${gameState.players.indexOf(p) + 1}:<br>
-                      Score: ${p.score}<br>
-                      Lives: ${p.lives}
-                  </div>
-              `).join('')}
-          </div>
-          <button id="play-again" class="join-button">Play Again</button>
+      const loser = gameState.players.find(p => p.id !== winner.id);
+      
+      gameOverDiv.innerHTML = `
+        <h2>Game Over!</h2>
+        <div class="winner">
+          🏆 Player ${winner.playerNumber} Wins! 🏆
+        </div>
+        <div class="loser">
+          Player ${loser.playerNumber}
+        </div>
+        <div class="final-scores">
+          Final Scores:<br>
+          Player ${winner.playerNumber}: ${winner.score} cookies<br>
+          Player ${loser.playerNumber}: ${loser.score} cookies
+        </div>
       `;
       
-      gameOverDiv.innerHTML = gameOverHTML;
       document.body.appendChild(gameOverDiv);
     }
 
