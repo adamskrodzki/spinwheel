@@ -40,19 +40,28 @@ Here is the full, ready-to-copy version of the specification:
 - **Endpoint:** `/maze/create`
   - **Purpose:** Initializes a new game instance with parameters for gameplay.
   - **Request Parameters:**
-    - `X`: Number of cookies required to win.
-    - `T`: Cooldown (in seconds) for placing trap cookies.
-    - `K`: Number of cookies present in the maze at any time.
-    - `mazeSize`: (Optional) The size of the maze grid.
-    - Other optional gameplay modifiers.
+    - `cookiesToWin`: Number of cookies required to win (default: 10).
+    - `trapCooldown`: Cooldown in seconds for placing trap cookies (default: 10).
+    - `activeCookies`: Number of cookies present in the maze at any time (default: 5).
+    - `mazeSize`: The size of the maze grid (default: 15).
+    - `lives`: Number of lives per player (default: 3).
+    - `viewRadius`: Player's visible radius in fog of war (default: 5).
   - **Response:**
     - `gameId`: Unique identifier for the created game.
-    - URL links for:
+    - URLs for:
       - Viewer screen: `/maze/view/[gameId]`
-      - Player 1 screen: `/maze/player1/[gameId]`
-      - Player 2 screen: `/maze/player2/[gameId]`
+      - Player screen: `/maze/player/[gameId]`
+  - **Rate Limiting:** Maximum 10 game creations per minute per IP address.
 
-### **3.2 Viewer Screen**
+### **3.2 Game Configuration**
+- **Endpoint:** `/maze/game-config/[gameId]`
+  - **Purpose:** Retrieves current game configuration and state.
+  - **Response:**
+    - Current game configuration
+    - Game state
+    - Number of connected players
+
+### **3.3 Viewer Screen**
 - **Endpoint:** `/maze/view/[gameId]`
   - **Purpose:** Provides a global view of the game for spectators.
   - **Behavior Before Players Join:**
@@ -65,16 +74,15 @@ Here is the full, ready-to-copy version of the specification:
       - Player scores and remaining lives.
       - Chat section for viewers.
 
-### **3.3 Player Screens**
-- **Endpoints:**
-  - `/maze/player1/[gameId]`
-  - `/maze/player2/[gameId]`
-  - **Purpose:** Redirects joining players to individual views for gameplay.
+### **3.4 Player Screen**
+- **Endpoint:** `/maze/player/[gameId]`
+  - **Purpose:** Provides player-specific game view and controls.
   - **Features:**
-    - Player-specific fog of war.
-    - Movement controls (e.g., arrow keys or WASD).
-    - HUD with score, lives, and trap cooldown timer.
-    - Real-time updates for maze state (cookies, traps, etc.).
+    - Dynamic role assignment (Player 1 or 2) based on join order
+    - Player-specific fog of war (viewRadius tiles)
+    - Movement controls (arrow keys or WASD)
+    - HUD with score, lives, and trap cooldown timer
+    - Real-time updates for maze state
 
 ---
 
@@ -90,7 +98,7 @@ Here is the full, ready-to-copy version of the specification:
      - A **join screen** allows two players to claim spots as Player 1 and Player 2.
    - After players join:
      - Spectators see the global game state.
-     - Players are redirected to their respective URLs: `/maze/player1/[gameId]` and `/maze/player2/[gameId]`.
+     - Players are redirected to their respective URLs: `/maze/player/[gameId]`.
 
 3. **Gameplay:**
    - Players compete to collect **X cookies** while avoiding traps.
@@ -121,7 +129,7 @@ Here is the full, ready-to-copy version of the specification:
 ### **5.3 Endpoints**
 - `/maze/create`: Initializes game instance and returns links.
 - `/maze/view/[gameId]`: Viewer screen with join functionality.
-- `/maze/player1/[gameId]` and `/maze/player2/[gameId]`: Player-specific views.
+- `/maze/player/[gameId]`: Player-specific views.
 
 ---
 

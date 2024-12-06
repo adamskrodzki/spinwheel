@@ -92,7 +92,13 @@
     socket.on('game_state', (state) => {
       gameState = state;
       updateUI();
-      drawGame();
+      const mazeContainer = document.getElementById('maze-container');
+      if (state.state === 'playing' && state.players.length === 2) {
+        mazeContainer.style.display = 'block';
+        drawGame();
+      } else {
+        mazeContainer.style.display = 'none';
+      }
     });
 
     socket.on('player_joined', ({ gameState: state }) => {
