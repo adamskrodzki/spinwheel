@@ -167,6 +167,11 @@
       canvas.width = state.config.mazeSize * cellSize;
       canvas.height = state.config.mazeSize * cellSize;
       
+      // Set font for emojis
+      ctx.font = `${Math.floor(cellSize * 0.8)}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      
       // Clear canvas
       ctx.fillStyle = '#000';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -198,48 +203,36 @@
       // Draw visible cookies
       state.cookies.forEach(cookie => {
         if (!visibleCells.has(`${cookie.x},${cookie.y}`)) return;
-        ctx.fillStyle = '#FFD700';
-        ctx.beginPath();
-        ctx.arc(
+        ctx.fillText('🍪', 
           (cookie.x + 0.5) * cellSize,
-          (cookie.y + 0.5) * cellSize,
-          cellSize / 3,
-          0,
-          Math.PI * 2
+          (cookie.y + 0.5) * cellSize
         );
-        ctx.fill();
       });
 
       // Draw visible trap cookies
       state.trapCookies.forEach(trap => {
         if (!visibleCells.has(`${trap.x},${trap.y}`)) return;
         const now = Date.now();
-        const isGlowing = now - trap.placedTime < 3000;
-        ctx.fillStyle = isGlowing ? '#FF4444' : '#FFD700';
-        ctx.beginPath();
-        ctx.arc(
-          (trap.x + 0.5) * cellSize,
-          (trap.y + 0.5) * cellSize,
-          cellSize / 3,
-          0,
-          Math.PI * 2
-        );
-        ctx.fill();
+        if (now - trap.placedTime < 3000) {
+          ctx.fillText('💥',
+            (trap.x + 0.5) * cellSize,
+            (trap.y + 0.5) * cellSize
+          );
+        } else {
+          ctx.fillText('🍪',
+            (trap.x + 0.5) * cellSize,
+            (trap.y + 0.5) * cellSize
+          );
+        }
       });
 
       // Draw visible players
       state.players.forEach(p => {
         if (!visibleCells.has(`${p.position.x},${p.position.y}`)) return;
-        ctx.fillStyle = p.id === 'player1' ? '#4CAF50' : '#2196F3';
-        ctx.beginPath();
-        ctx.arc(
+        ctx.fillText(p.id === playerId ? '😎' : '🤖',
           (p.position.x + 0.5) * cellSize,
-          (p.position.y + 0.5) * cellSize,
-          cellSize / 2.5,
-          0,
-          Math.PI * 2
+          (p.position.y + 0.5) * cellSize
         );
-        ctx.fill();
       });
     }
   </script>

@@ -218,3 +218,76 @@ canvas {
   border-radius: 4px;
   margin: 10px 0;
 }
+
+/* Game Over Screen */
+.game-over {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(135deg, #2c3e50, #3498db);
+  color: white;
+  padding: 40px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  z-index: 1000;
+  min-width: 300px;
+}
+
+.game-over h2 {
+  font-size: 2em;
+  margin-bottom: 20px;
+  color: #ecf0f1;
+}
+
+.winner {
+  font-size: 2.5em;
+  font-weight: bold;
+  margin: 20px 0;
+  color: #2ecc71;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+  animation: celebrate 1s ease-in-out infinite;
+}
+
+@keyframes celebrate {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.final-scores {
+  margin: 30px 0;
+  font-size: 1.2em;
+}
+
+.final-scores .player-stats {
+  display: flex;
+  justify-content: space-around;
+  gap: 20px;
+}
+
+.final-scores .stat-item {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 15px;
+  border-radius: 10px;
+  line-height: 1.6;
+}
+
+.game-over .join-button {
+  margin-top: 20px;
+  font-size: 1.2em;
+  padding: 12px 30px;
+  background: #2ecc71;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.game-over .join-button:hover {
+  background: #27ae60;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
