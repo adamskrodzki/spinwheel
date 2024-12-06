@@ -70,6 +70,9 @@
       if (state.state === 'playing') {
         document.getElementById('waitingScreen').style.display = 'none';
         document.getElementById('gameScreen').style.display = 'block';
+      } else if (state.state === 'finished') {
+        window.location.href = `/maze/view/${gameId}`;
+        return;
       }
       updateGame(state);
     });
@@ -83,7 +86,7 @@
     // Listen for game over
     socket.on('game_over', (result) => {
       alert(result.message);
-      window.location.href = '/maze/create';
+      window.location.href = `/maze/view/${gameId}`;
     });
 
     // Handle keyboard input
