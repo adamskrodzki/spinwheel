@@ -59,7 +59,12 @@ class MazeManager {
             trapCookies: [],
             state: 'waiting',
             maze: this.generateMaze(gameConfig.mazeSize),
-            createdAt: Date.now()
+            createdAt: Date.now(),
+            isGameOver: function() {
+                return this.state === 'finished' || 
+                       this.players.some(p => p.score >= this.config.cookiesToWin) ||
+                       this.players.some(p => p.lives <= 0);
+            }
         };
 
         // Generate initial cookies after maze is created

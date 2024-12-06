@@ -63,47 +63,133 @@ Here is the full, ready-to-copy version of the specification:
 
 ### **3.3 Viewer Screen**
 - **Endpoint:** `/maze/view/[gameId]`
-  - **Purpose:** Provides a global view of the game for spectators.
-  - **Behavior Before Players Join:**
-    - Displays a **join screen** where two players can connect.
-    - Shows a link for Player 1 and Player 2 to join (generated from `/maze/create`).
-  - **Behavior After Players Join:**
-    - Displays the global maze view:
-      - Player positions.
-      - Normal and trap cookies (with glowing effect for active traps).
-      - Player scores and remaining lives.
-      - Chat section for viewers.
+- **Purpose:** Provides a global view of the game for spectators and serves as the game lobby.
+- **Stage-Based Behavior:**
+  1. **Before First Player (Lobby Stage)**
+    - Displays welcome message and game configuration
+    - Shows prominent "Join Game" button at the top
+    - Displays empty maze grid with visual indicators for:
+      - Cookie spawn points (dimmed)
+      - Potential player starting positions (dimmed)
+    - Shows game rules and controls explanation
+    - Displays QR code/link for easy sharing
+
+  2. **One Player Joined (Waiting Stage)**
+    - "Join Game" button remains prominent for second player
+    - Shows connected player's name/identifier
+    - Displays "Waiting for Player 2..." message
+    - Maze grid shows:
+      - First player's starting position
+      - Cookie spawn points (dimmed)
+      - Animated waiting indicator
+
+  3. **Game in Progress**
+    - Removes join button
+    - Shows full maze view with:
+      - Both players' positions and movements in real-time
+      - All cookies (normal and trap)
+      - Visual effects for trap placement and collection
+      - Player scores and lives
+    - Displays game stats:
+      - Time elapsed
+      - Cookies collected by each player
+      - Traps placed/triggered
+
+  4. **Game Ended**
+    - Players automatically redirected here from player view
+    - Displays winner announcement with victory animation
+    - Shows final scores and stats
+    - Presents "Play Again" button (resets game for new players to join)
+    - Shows game replay option
+    - Displays match statistics:
+      - Total cookies collected
+      - Traps placed/triggered
+      - Game duration
+      - Winner's path visualization
 
 ### **3.4 Player Screen**
 - **Endpoint:** `/maze/player/[gameId]`
-  - **Purpose:** Provides player-specific game view and controls.
-  - **Features:**
-    - Dynamic role assignment (Player 1 or 2) based on join order
-    - Player-specific fog of war (viewRadius tiles)
-    - Movement controls (arrow keys or WASD)
-    - HUD with score, lives, and trap cooldown timer
-    - Real-time updates for maze state
+- **Stage-Based Behavior:**
+  1. **Before Game Start (Joining)**
+    - Shows player number assignment (1 or 2)
+    - Displays waiting screen with:
+      - "Waiting for other player..." message
+      - Animated loading indicator
+      - Game controls tutorial
+      - Game rules reminder
 
----
+  2. **Game Ready (Both Players Present)**
+    - Brief countdown timer (3-2-1)
+    - Shows initial fog of war view
+    - Displays HUD elements:
+      - Lives counter
+      - Score
+      - Trap cooldown timer
+      - Mini-map (if enabled in config)
+
+  3. **During Gameplay**
+    - Fog of war view (viewRadius tiles visible)
+    - Real-time HUD updates:
+      - Current score
+      - Remaining lives
+      - Trap cooldown status
+      - Opponent's score
+    - Visual/audio feedback for:
+      - Cookie collection
+      - Trap placement
+      - Taking damage
+
+  4. **Game Over**
+    - Automatically redirects to viewer URL
+    - Game continues in "Game Ended" state in viewer
 
 ## **4. Revised Game Flow**
 
-1. **Game Creation:**
-   - A game is initialized via `/maze/create` with parameters for the game instance.
-   - The response includes a unique `gameId` and links to the viewer and player screens.
+1. **Game Creation and Setup:**
+   - Host creates game via `/maze/create` with parameters
+   - System generates:
+     - Unique `gameId`
+     - Maze layout
 
-2. **Spectator and Player Join:**
-   - Spectators and potential players visit `/maze/view/[gameId]`.
-   - Before players join:
-     - A **join screen** allows two players to claim spots as Player 1 and Player 2.
-   - After players join:
-     - Spectators see the global game state.
-     - Players are redirected to their respective URLs: `/maze/player/[gameId]`.
+2. **Player Join Process:**
+   - Players join through viewer screen
+   - First player gets Player 1 status
+   - Second player gets Player 2 status
+   - Each player redirected to `/maze/player/[gameId]`
+   - Both players must confirm ready status
 
-3. **Gameplay:**
-   - Players compete to collect **X cookies** while avoiding traps.
-   - Spectators observe and provide hints or distractions.
-   - Game ends when one player collects **X cookies** or when one player runs out of lives.
+3. **Game Initialization:**
+   - 3-second countdown displayed to all
+   - Initial cookie placement
+   - Players placed at starting positions
+   - Fog of war activated for players
+   - Game timer starts
+
+4. **Active Gameplay:**
+   - Players navigate maze collecting cookies
+   - Real-time updates for:
+     - Player movements
+     - Cookie collection/spawning
+     - Trap placement/triggering
+     - Score/lives changes
+   - Spectators see global view
+   - Players see fog of war view
+
+5. **Game End Conditions:**
+   - Player reaches target cookie count
+   - Player loses all lives
+   - Both players disconnect
+   - Time limit reached (if configured)
+
+6. **Post-Game:**
+   - All players automatically redirected to viewer URL
+   - Winner announced with victory animation
+   - Stats displayed for all participants
+   - Replay available for review
+   - "Play Again" resets game for new players:
+     - Clears current players
+     - Resets maze and game state
+     - Maintains same game ID and configuration
 
 ---
 

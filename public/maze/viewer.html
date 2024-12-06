@@ -5,6 +5,12 @@
   <link rel="stylesheet" href="styles.css">
   <script src="/socket.io/socket.io.js"></script>
   <style>
+    .stage-container {
+      text-align: center;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
     .join-section {
       text-align: center;
       padding: 20px 0;
@@ -37,11 +43,83 @@
     }
 
     .game-container {
-      padding-top: 100px; /* Make space for fixed join-section */
+      padding-top: 100px;
+    }
+
+    .game-stats {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 8px;
+    }
+
+    .game-over {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.95);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      z-index: 1000;
+    }
+
+    .winner-animation {
+      animation: celebrate 1s ease-in-out infinite;
+    }
+
+    @keyframes celebrate {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    .stats-table {
+      width: 100%;
+      margin: 20px 0;
+      border-collapse: collapse;
+    }
+
+    .stats-table td, .stats-table th {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .rules-section {
+      margin: 20px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 8px;
+    }
+
+    #qr-code {
+      margin: 20px auto;
+      display: block;
     }
   </style>
 </head>
 <body>
+  <!-- Stage containers -->
+  <div id="lobby-stage" class="stage-container" style="display: none;">
+    <h1>Welcome to Cookie Heist Maze!</h1>
+    <div class="rules-section">
+      <h2>Game Rules</h2>
+      <p>Collect cookies, avoid traps, and be the first to win!</p>
+      <ul>
+        <li>Use arrow keys or WASD to move</li>
+        <li>Space to place trap cookies</li>
+        <li>Collect normal cookies to score points</li>
+        <li>Avoid trap cookies or lose lives</li>
+      </ul>
+    </div>
+    <div id="qr-code"></div>
+  </div>
+
   <div class="game-container">
     <div class="game-header">
       <div class="player-stats">
@@ -57,6 +135,12 @@
           <div>Score: <span id="p2-score">0</span></div>
         </div>
       </div>
+      
+      <div class="game-stats" id="game-stats" style="display: none;">
+        <div>Time: <span id="game-time">00:00</span></div>
+        <div>Cookies Collected: <span id="total-cookies">0</span></div>
+        <div>Traps Placed: <span id="total-traps">0</span></div>
+      </div>
     </div>
     
     <div id="maze-container">
@@ -65,6 +149,36 @@
     
     <div id="join-section">
       <a id="player-link" class="join-button" target="_blank">Play Game</a>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="game-over" class="game-over" style="display: none;">
+      <h2 id="winner-announcement" class="winner-animation"></h2>
+      <table class="stats-table">
+        <tr>
+          <th>Stat</th>
+          <th>Player 1</th>
+          <th>Player 2</th>
+        </tr>
+        <tr>
+          <td>Final Score</td>
+          <td id="p1-final-score">0</td>
+          <td id="p2-final-score">0</td>
+        </tr>
+        <tr>
+          <td>Cookies Collected</td>
+          <td id="p1-cookies">0</td>
+          <td id="p2-cookies">0</td>
+        </tr>
+        <tr>
+          <td>Traps Placed</td>
+          <td id="p1-traps">0</td>
+          <td id="p2-traps">0</td>
+        </tr>
+      </table>
+      <div>Game Duration: <span id="final-time">00:00</span></div>
+      <button id="play-again" class="join-button">Play Again</button>
+      <button id="view-replay" class="join-button">View Replay</button>
     </div>
   </div>
 
@@ -75,6 +189,8 @@
     const ctx = canvas.getContext('2d');
     
     let gameState = null;
+    let gameStartTime = null;
+    let gameTimer = null;
 
     // Set up player links
     const baseUrl = window.location.origin;
@@ -82,6 +198,22 @@
 
     // Connect to game
     socket.on('connect', () => {
+      // Store game state in session storage to handle refreshes
+      const storedState = sessionStorage.getItem(`gameState_${gameId}`);
+      if (storedState) {
+        try {
+          const savedState = JSON.parse(storedState);
+          gameState = savedState;
+          gameStartTime = savedState.startTime || null;
+          if (gameStartTime && savedState.state === 'playing') {
+            startGameTimer();
+          }
+          updateUI();
+        } catch (e) {
+          console.error('Error restoring game state:', e);
+        }
+      }
+
       socket.emit('join_game', {
         gameId,
         role: 'viewer'
@@ -91,13 +223,26 @@
     // Game state updates
     socket.on('game_state', (state) => {
       gameState = state;
+      // Save game state to session storage
+      sessionStorage.setItem(`gameState_${gameId}`, JSON.stringify({
+        ...state,
+        startTime: gameStartTime
+      }));
+      
       updateUI();
-      const mazeContainer = document.getElementById('maze-container');
-      if (state.state === 'playing' && state.players.length === 2) {
+      if (state.state === 'playing') {
+        if (!gameStartTime) {
+          gameStartTime = Date.now();
+          startGameTimer();
+          // Update stored state with start time
+          sessionStorage.setItem(`gameState_${gameId}`, JSON.stringify({
+            ...state,
+            startTime: gameStartTime
+          }));
+        }
+        const mazeContainer = document.getElementById('maze-container');
         mazeContainer.style.display = 'block';
         drawGame();
-      } else {
-        mazeContainer.style.display = 'none';
       }
     });
 
@@ -105,9 +250,27 @@
       updateGameState(state);
     });
 
+    socket.on('game_over', (finalState) => {
+      gameState = finalState;
+      // Clear session storage on game over
+      sessionStorage.removeItem(`gameState_${gameId}`);
+      showGameOver();
+    });
+
     socket.on('error', (error) => {
       console.error('Socket error:', error);
       alert(error.message);
+    });
+
+    // Handle disconnection
+    socket.on('disconnect', () => {
+      // Save current state before disconnection
+      if (gameState) {
+        sessionStorage.setItem(`gameState_${gameId}`, JSON.stringify({
+          ...gameState,
+          startTime: gameStartTime
+        }));
+      }
     });
 
     function updateGameState(state) {
@@ -115,9 +278,62 @@
       updateUI();
     }
 
+    function startGameTimer() {
+      if (gameTimer) clearInterval(gameTimer);
+      gameTimer = setInterval(updateGameTime, 1000);
+    }
+
+    function updateGameTime() {
+      if (!gameStartTime) return;
+      const elapsed = Math.floor((Date.now() - gameStartTime) / 1000);
+      const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+      const seconds = (elapsed % 60).toString().padStart(2, '0');
+      document.getElementById('game-time').textContent = `${minutes}:${seconds}`;
+    }
+
+    function showGameOver() {
+      clearInterval(gameTimer);
+      const gameOver = document.getElementById('game-over');
+      const winner = gameState.players.find(p => p.score >= gameState.config.cookiesToWin);
+      
+      document.getElementById('winner-announcement').textContent = winner ? 
+        `Player ${gameState.players.indexOf(winner) + 1} Wins!` : 'Game Over!';
+      
+      // Update final stats
+      document.getElementById('p1-final-score').textContent = gameState.players[0]?.score || 0;
+      document.getElementById('p2-final-score').textContent = gameState.players[1]?.score || 0;
+      document.getElementById('p1-cookies').textContent = gameState.players[0]?.cookiesCollected || 0;
+      document.getElementById('p2-cookies').textContent = gameState.players[1]?.cookiesCollected || 0;
+      document.getElementById('p1-traps').textContent = gameState.players[0]?.trapsPlaced || 0;
+      document.getElementById('p2-traps').textContent = gameState.players[1]?.trapsPlaced || 0;
+      
+      const elapsed = Math.floor((Date.now() - gameStartTime) / 1000);
+      const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+      const seconds = (elapsed % 60).toString().padStart(2, '0');
+      document.getElementById('final-time').textContent = `${minutes}:${seconds}`;
+      
+      gameOver.style.display = 'block';
+    }
+
+    function resetGame() {
+      socket.emit('reset_game', { gameId });
+      document.getElementById('game-over').style.display = 'none';
+      gameStartTime = null;
+      if (gameTimer) clearInterval(gameTimer);
+      updateUI();
+    }
+
+    document.getElementById('play-again').addEventListener('click', resetGame);
+    document.getElementById('view-replay').addEventListener('click', () => {
+      // Implement replay functionality
+      socket.emit('request_replay', { gameId });
+    });
+
     function updateUI() {
       const statusElem = document.getElementById('game-status');
       const joinSection = document.getElementById('join-section');
+      const lobbyStage = document.getElementById('lobby-stage');
+      const gameStats = document.getElementById('game-stats');
       
       if (!gameState) {
         statusElem.textContent = 'Connecting...';
@@ -128,31 +344,36 @@
       if (gameState.players[0]) {
         document.getElementById('p1-lives').textContent = gameState.players[0].lives;
         document.getElementById('p1-score').textContent = gameState.players[0].score;
-        document.getElementById('player1-link').style.display = 'none';
       }
       
       if (gameState.players[1]) {
         document.getElementById('p2-lives').textContent = gameState.players[1].lives;
         document.getElementById('p2-score').textContent = gameState.players[1].score;
-        document.getElementById('player2-link').style.display = 'none';
       }
 
-      // Update game status
+      // Update game status and visibility
       switch(gameState.state) {
         case 'waiting':
           statusElem.textContent = `Waiting for players... (${gameState.players.length}/2)`;
           joinSection.style.display = gameState.players.length < 2 ? 'block' : 'none';
+          lobbyStage.style.display = gameState.players.length === 0 ? 'block' : 'none';
+          gameStats.style.display = 'none';
           break;
         case 'playing':
           statusElem.textContent = 'Game in progress';
           joinSection.style.display = 'none';
+          lobbyStage.style.display = 'none';
+          gameStats.style.display = 'block';
+          document.getElementById('total-cookies').textContent = 
+            gameState.players.reduce((sum, p) => sum + (p.cookiesCollected || 0), 0);
+          document.getElementById('total-traps').textContent = 
+            gameState.players.reduce((sum, p) => sum + (p.trapsPlaced || 0), 0);
           break;
         case 'finished':
-          const winner = gameState.players.find(p => p.score >= gameState.config.cookiesToWin);
-          statusElem.textContent = winner ? 
-            `Game Over! Player ${gameState.players.indexOf(winner) + 1} wins!` :
-            'Game Over!';
+          statusElem.textContent = 'Game Over!';
           joinSection.style.display = 'none';
+          lobbyStage.style.display = 'none';
+          gameStats.style.display = 'none';
           break;
       }
     }
@@ -177,6 +398,10 @@
           const tile = gameState.maze[y][x];
           ctx.fillStyle = tile === 1 ? '#333' : '#fff';
           ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+          
+          // Draw grid lines
+          ctx.strokeStyle = '#ddd';
+          ctx.strokeRect(x * tileSize, y * tileSize, tileSize, tileSize);
           
           // Draw cookies and traps
           if (tile === 0) {
@@ -207,6 +432,12 @@
                 Math.PI * 2
               );
               ctx.fill();
+              
+              if (isGlowing) {
+                ctx.strokeStyle = '#FF6B6B';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+              }
             }
           }
         }
@@ -214,11 +445,11 @@
       
       // Draw players
       gameState.players.forEach((player, index) => {
-        ctx.fillStyle = index === 0 ? '#4CAF50' : '#F44336';
+        ctx.fillStyle = index === 0 ? '#4CAF50' : '#2196F3';
         ctx.beginPath();
         ctx.arc(
-          (player.position.x + 0.5) * tileSize,
-          (player.position.y + 0.5) * tileSize,
+          (player.x + 0.5) * tileSize,
+          (player.y + 0.5) * tileSize,
           tileSize * 0.4,
           0,
           Math.PI * 2
@@ -236,9 +467,12 @@
 
     // Start animation loop
     function gameLoop() {
-      drawGame();
+      if (gameState && gameState.state === 'playing') {
+        drawGame();
+      }
       requestAnimationFrame(gameLoop);
     }
+    
     gameLoop();
   </script>
 </body>
