@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Get aMAZEd - Cookie Heist</title>
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    .maze-visualization {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 50%;
+      height: 100%;
+      opacity: 0.1;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .maze-cell {
+      position: absolute;
+      background: white;
+      transition: opacity 0.3s;
+    }
+
+    .landing-container {
+      text-align: center;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      position: relative;
+      z-index: 2;
+    }
+
+    .title {
+      font-size: 5em;
+      margin-bottom: 10px;
+      color: #fff;
+      text-shadow: 0 0 10px rgba(0,0,0,0.3);
+      animation: bounceIn 1s;
+      font-weight: bold;
+    }
+
+    .subtitle {
+      font-size: 2.5em;
+      margin-bottom: 40px;
+      color: #fdbb2d;
+      text-shadow: 0 0 10px rgba(0,0,0,0.3);
+      animation: bounceIn 1s 0.2s both;
+    }
+
+    .emoji-container {
+      display: flex;
+      gap: 60px;
+      margin: 40px 0;
+      transform: rotate(-5deg);
+    }
+
+    .emoji {
+      font-size: 6em;
+      animation: float 3s infinite ease-in-out;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 50%;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+      transition: transform 0.3s;
+    }
+
+    .emoji:hover {
+      transform: scale(1.2) rotate(10deg);
+    }
+
+    .emoji:nth-child(2) {
+      animation-delay: 0.2s;
+      transform: rotate(5deg);
+    }
+
+    .emoji:nth-child(3) {
+      animation-delay: 0.4s;
+      transform: rotate(-5deg);
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0); }
+      50% { transform: translateY(-20px) rotate(5deg); }
+    }
+
+    .click-anywhere {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.2em;
+      color: #fff;
+      animation: pulse 2s infinite;
+      text-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
+      50% { opacity: 0.5; transform: translateX(-50%) scale(1.1); }
+    }
+
+    .game-stats {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      color: white;
+      font-size: 1.2em;
+      text-align: right;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <div class="landing-container" onclick="window.location.href='create'">
+    <div id="maze-visualization" class="maze-visualization"></div>
+    <h1 class="title">Get aMAZEd</h1>
+    <h2 class="subtitle">Cookie Heist</h2>
+    <div class="emoji-container">
+      <div class="emoji">🍪</div>
+      <div class="emoji">😎</div>
+      <div class="emoji">🤖</div>
+    </div>
+    <div class="click-anywhere">Click anywhere to start your heist</div>
+    <div class="game-stats">
+      <div>🎮 Players Online: --</div>
+      <div>🏆 Games Played: --</div>
+    </div>
+  </div>
+  <script>
+    // Create maze visualization
+    function createMaze() {
+      const container = document.getElementById('maze-visualization');
+      const cellSize = 40;
+      const rows = Math.ceil(window.innerHeight / cellSize);
+      const cols = Math.ceil(window.innerWidth / (2 * cellSize)); // Half width for left side
+
+      // Clear previous maze
+      container.innerHTML = '';
+
+      // Create maze grid
+      for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+          // Randomly decide if this is a wall
+          if (Math.random() < 0.3) {
+            const cell = document.createElement('div');
+            cell.className = 'maze-cell';
+            cell.style.width = cellSize + 'px';
+            cell.style.height = cellSize + 'px';
+            cell.style.left = (j * cellSize) + 'px';
+            cell.style.top = (i * cellSize) + 'px';
+            container.appendChild(cell);
+          }
+        }
+      }
+
+      // Add some random cookies and traps
+      for (let i = 0; i < 5; i++) {
+        const cookie = document.createElement('div');
+        cookie.className = 'maze-cell';
+        cookie.style.width = cellSize + 'px';
+        cookie.style.height = cellSize + 'px';
+        cookie.style.left = (Math.random() * (cols * cellSize)) + 'px';
+        cookie.style.top = (Math.random() * (rows * cellSize)) + 'px';
+        cookie.style.background = 'none';
+        cookie.style.fontSize = cellSize + 'px';
+        cookie.textContent = '🍪';
+        cookie.style.opacity = '0.3';
+        container.appendChild(cookie);
+      }
+    }
+
+    // Initialize maze and recreate on window resize
+    createMaze();
+    window.addEventListener('resize', createMaze);
+  </script>
+</body>
+</html>

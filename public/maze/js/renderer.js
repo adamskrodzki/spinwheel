@@ -106,15 +106,15 @@ const MazeRenderer = {
             ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
             ctx.fillRect(
                 p.position.x * cellSize,
-                p.position.y * cellSize,
-                20,
-                20
+                p.position.y * cellSize+cellSize/2,
+                cellSize*0.5,
+                cellSize*0.5
             );
             ctx.fillStyle = '#fff';
-            ctx.font = '14px Arial';
+            ctx.font = `${Math.floor(cellSize * 0.4)}px Arial`;
             ctx.fillText(playerNumber,
                 p.position.x * cellSize + 10,
-                p.position.y * cellSize + 10
+                p.position.y * cellSize +cellSize/2 + 10
             );
             
             // Reset font for next emoji

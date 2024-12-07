@@ -329,8 +329,8 @@
       } else {
         // Normal game end - find winner based on score or lives
         winner = gameState.players.reduce((prev, curr) => {
-          if (!prev || (curr.score > prev.score && curr.lives > 0)) return curr;
-          if (curr.score === prev.score && curr.lives > prev.lives) return curr;
+          if ((!prev && curr.lives > 0) || (curr.score > (prev?prev.score:0)   && curr.lives > 0)) return curr;
+          if (curr.score === (prev?prev.score:0) && curr.lives > (prev?prev.lives:0)) return curr;
           return prev;
         }, null);
         loser = gameState.players.find(p => p.id !== winner.id);

@@ -9,6 +9,11 @@ const createGameLimiter = rateLimit({
 });
 
 function setupMazeRoutes(app, mazeManager) {
+  // Serve the landing page as default
+  app.get('/maze', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'landing', 'index.html'));
+  });
+
   // Serve the game creation page
   app.get('/maze/create', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'creator.html'));
