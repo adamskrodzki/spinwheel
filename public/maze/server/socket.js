@@ -34,22 +34,32 @@ function setupMazeSocketHandlers(io, mazeManager) {
         }
     }
 
+    function broadcastGameState(game) {
+        if (!game) return;
+        
+        // Check if game is over using the game's method
+        if (game.isGameOver()) {
+            game.state = 'finished';
+        }
+        
+        // Broadcast to all clients in the game room
+        mazeNamespace.to(`game:${game.id}`).emit('game_state', game);
+    }
+
+    function broadcastStats() {
+        mazeNamespace.emit('stats_update', {
+            playersOnline: playerSockets.size,
+            gamesPlayed: mazeManager.games.size
+        });
+    }
+
     mazeNamespace.on('connection', (socket) => {
+        connectedClients.add(socket.handshake.address);
+        broadcastStats();
+
         let currentGame = null;
         let playerId = socket.id;
         let role = null;
-
-        function broadcastGameState(game) {
-            if (!game) return;
-            
-            // Check if game is over using the game's method
-            if (game.isGameOver()) {
-                game.state = 'finished';
-            }
-            
-            // Broadcast to all clients in the game room
-            mazeNamespace.to(`game:${game.id}`).emit('game_state', game);
-        }
 
         const gameInterval = setInterval(() => {
             if (currentGame) {
@@ -111,17 +121,14 @@ function setupMazeSocketHandlers(io, mazeManager) {
                     
                     console.log(`Player ${socket.id} added to game ${gameId}. Total players: ${game.players.length}`);
                     broadcastGameState(game);
+                    playerSockets.set(socket.id, socket);
+                    broadcastStats();
                 } else {
                     socket.emit('error', { message: 'Could not join game' });
                 }
             } else {
                 // Viewer
                 broadcastGameState(game);
-            }
-
-            // Store socket instance for cleanup
-            if (requestedRole === 'player') {
-                playerSockets.set(socket.id, socket);
             }
         });
 
@@ -165,6 +172,9 @@ function setupMazeSocketHandlers(io, mazeManager) {
 
         socket.on('disconnect', () => {
             console.log(`Socket ${socket.id} disconnected`);
+            connectedClients.delete(socket.handshake.address);
+            broadcastStats();
+
             if (currentGame && role === 'player') {
                 const player = currentGame.players.find(p => p.id === playerId);
                 if (player) {
@@ -218,10 +228,6 @@ function setupMazeSocketHandlers(io, mazeManager) {
                 }
             }
             
-            if (socket.handshake.address) {
-                connectedClients.delete(socket.handshake.address);
-            }
-
             // Clean up game interval
             const intervals = gameIntervals.get(socket.id);
             if (intervals) {

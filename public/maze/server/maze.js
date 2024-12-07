@@ -50,8 +50,18 @@ class MazeManager {
 
     saveGames() {
         try {
-            // Convert Map to object for JSON serialization
-            const gamesObj = Object.fromEntries(this.games);
+            // First convert Map to an object and create a deep copy
+            const gamesObj = {};
+            for (const [id, game] of this.games) {
+                // Deep copy the game object
+                gamesObj[id] = JSON.parse(JSON.stringify(game));
+                // Clear the dynamic properties
+                gamesObj[id].players = [];
+                gamesObj[id].cookies = [];
+                gamesObj[id].trapCookies = [];
+                gamesObj[id].state = 'waiting';
+            }
+            
             const data = JSON.stringify(gamesObj, null, 2);
             this.fs.writeFileSync(this.gamesFilePath, data);
         } catch (err) {

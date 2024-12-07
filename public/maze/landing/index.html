@@ -3,6 +3,7 @@
 <head>
   <title>Get aMAZEd - Cookie Heist</title>
   <link rel="stylesheet" href="../styles.css">
+  <script src="/socket.io/socket.io.js"></script>
   <style>
     body {
       margin: 0;
@@ -134,11 +135,20 @@
     </div>
     <div class="click-anywhere">Click anywhere to start your heist</div>
     <div class="game-stats">
-      <div>🎮 Players Online: --</div>
-      <div>🏆 Games Played: --</div>
+      <div>🎮 Players Online: <span id="playersOnline">--</span></div>
+      <div>🏆 Games Played: <span id="gamesPlayed">--</span></div>
     </div>
   </div>
   <script>
+    // Socket.io connection
+    const socket = io('/maze');
+    
+    // Update stats when received from server
+    socket.on('stats_update', (stats) => {
+      document.getElementById('playersOnline').textContent = stats.playersOnline;
+      document.getElementById('gamesPlayed').textContent = stats.gamesPlayed;
+    });
+
     // Create maze visualization
     function createMaze() {
       const container = document.getElementById('maze-visualization');
