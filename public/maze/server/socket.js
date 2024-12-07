@@ -193,6 +193,7 @@ function setupMazeSocketHandlers(io, mazeManager) {
                                         if (remainingPlayer) {
                                             game.winner = remainingPlayer.id;
                                             game.winReason = 'opponent_disconnected';
+                                            console.log(`Player ${remainingPlayer.id} wins due to opponent disconnect`);
                                         }
                                     }
                                     

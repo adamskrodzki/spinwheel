@@ -378,35 +378,45 @@
       const gameOverDiv = document.createElement('div');
       gameOverDiv.className = 'game-over';
       
-      // Find winner based on score or lives
-      const winner = gameState.players.reduce((prev, curr) => {
-        if (!prev || (curr.score > prev.score && curr.lives > 0)) return curr;
-        if (curr.score === prev.score && curr.lives > prev.lives) return curr;
-        return prev;
-      }, null);
+      let winner, loser;
+      
+      if (gameState.winReason === 'opponent_disconnected') {
+        // Handle disconnection case
+        winner = gameState.players.find(p => p.id === gameState.winner);
+        loser = { score: '—', lives: '—' }; // Placeholder for disconnected player
+      } else {
+        // Normal game end - find winner based on score or lives
+        winner = gameState.players.reduce((prev, curr) => {
+          if (!prev || (curr.score > prev.score && curr.lives > 0)) return curr;
+          if (curr.score === prev.score && curr.lives > prev.lives) return curr;
+          return prev;
+        }, null);
+        loser = gameState.players.find(p => p.id !== winner.id);
+      }
 
-      // Get player indices
+      // Get winner index (for player number display)
       const winnerIndex = gameState.players.findIndex(p => p.id === winner.id);
-      const loser = gameState.players.find(p => p.id !== winner.id);
-      const loserIndex = gameState.players.findIndex(p => p.id === loser.id);
       
       gameOverDiv.innerHTML = `
-        <h2>Game Over!</h2>
-        <div class="winner">
-          🏆 Player ${winnerIndex + 1} Wins! 🏆
-        </div>
-        <div class="final-scores">
-          <div class="player-stats">
-            <div class="stat-item">
-              Player ${winnerIndex + 1}:<br>
+        <div class="game-over-content">
+          <h2>Game Over!</h2>
+          ${gameState.winReason === 'opponent_disconnected' 
+            ? '<p>Opponent disconnected - You win!</p>'
+            : `<p>Player ${winnerIndex + 1} wins!</p>`
+          }
+          <div class="final-stats">
+            <div class="stat-item winner">
+              Player ${winnerIndex + 1} (Winner):<br>
               Score: ${winner.score} 🍪<br>
               Lives: ${winner.lives} ❤️
             </div>
-            <div class="stat-item">
-              Player ${loserIndex + 1}:<br>
-              Score: ${loser.score} 🍪<br>
-              Lives: ${loser.lives} ❤️
-            </div>
+            ${gameState.winReason !== 'opponent_disconnected' ? `
+              <div class="stat-item">
+                Player ${gameState.players.findIndex(p => p.id !== winner.id) + 1}:<br>
+                Score: ${loser.score} 🍪<br>
+                Lives: ${loser.lives} ❤️
+              </div>
+            ` : ''}
           </div>
         </div>
         <button id="play-again" class="join-button">Play Again</button>
