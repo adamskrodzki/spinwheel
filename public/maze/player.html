@@ -160,7 +160,8 @@
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script>
+  <script src="./../js/renderer.js" defer></script>
+  <script defer>
     // Connect to maze namespace
     const socket = io('/maze');
     const gameId = window.location.pathname.split('/').pop();
@@ -278,90 +279,11 @@
 
     function renderGame(state, player) {
       const canvas = document.getElementById('maze-container');
-      if (!canvas || !state) return;
-
-      const ctx = canvas.getContext('2d');
-      
-      // Calculate the maximum possible canvas size while maintaining aspect ratio
-      const maxSize = Math.min(
-        canvas.parentElement.clientWidth * 0.95,
-        canvas.parentElement.clientHeight * 0.95
-      );
-      
-      // Set canvas to a constant size
-      canvas.width = maxSize;
-      canvas.height = maxSize;
-      
-      // Calculate cell size based on maze dimensions
-      const cellSize = maxSize / state.config.mazeSize;
-      
-      // Set font for emojis
-      ctx.font = `${Math.floor(cellSize * 0.8)}px Arial`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      
-      // Clear canvas
-      ctx.fillStyle = '#000';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Calculate visible area
-      const visibleCells = new Set();
-      for (let dy = -state.config.viewRadius; dy <= state.config.viewRadius; dy++) {
-        for (let dx = -state.config.viewRadius; dx <= state.config.viewRadius; dx++) {
-          const x = player.position.x + dx;
-          const y = player.position.y + dy;
-          if (x >= 0 && x < state.config.mazeSize && 
-              y >= 0 && y < state.config.mazeSize) {
-            visibleCells.add(`${x},${y}`);
-          }
-        }
+      if (typeof MazeRenderer === 'undefined') {
+        console.error('MazeRenderer not loaded');
+        return;
       }
-
-      // Draw visible maze cells
-      for (let y = 0; y < state.config.mazeSize; y++) {
-        for (let x = 0; x < state.config.mazeSize; x++) {
-          if (!visibleCells.has(`${x},${y}`)) continue;
-
-          const cell = state.maze[y][x];
-          ctx.fillStyle = cell === 1 ? '#666' : '#fff';
-          ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
-        }
-      }
-
-      // Draw visible cookies
-      state.cookies.forEach(cookie => {
-        if (!visibleCells.has(`${cookie.x},${cookie.y}`)) return;
-        ctx.fillText('🍪', 
-          (cookie.x + 0.5) * cellSize,
-          (cookie.y + 0.5) * cellSize
-        );
-      });
-
-      // Draw visible trap cookies
-      state.trapCookies.forEach(trap => {
-        if (!visibleCells.has(`${trap.x},${trap.y}`)) return;
-        const now = Date.now();
-        if (now - trap.placedTime < 3000) {
-          ctx.fillText('💥',
-            (trap.x + 0.5) * cellSize,
-            (trap.y + 0.5) * cellSize
-          );
-        } else {
-          ctx.fillText('🍪',
-            (trap.x + 0.5) * cellSize,
-            (trap.y + 0.5) * cellSize
-          );
-        }
-      });
-
-      // Draw visible players
-      state.players.forEach(p => {
-        if (!visibleCells.has(`${p.position.x},${p.position.y}`)) return;
-        ctx.fillText(p.id === playerId ? '😎' : '🤖',
-          (p.position.x + 0.5) * cellSize,
-          (p.position.y + 0.5) * cellSize
-        );
-      });
+      MazeRenderer.renderGame(canvas, state, player);
     }
   </script>
 </body>

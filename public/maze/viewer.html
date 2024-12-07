@@ -200,7 +200,8 @@
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script>
+  <script src="./../js/renderer.js" defer></script>
+  <script defer>
     const socket = io('/maze');
     const gameId = window.location.pathname.split('/').pop();
     let gameState = null;
@@ -300,98 +301,11 @@
 
     function drawGame(canvas) {
       if (!gameState) return;
-
-      const ctx = canvas.getContext('2d');
-      
-      // Calculate the maximum possible canvas size while maintaining aspect ratio
-      const maxSize = Math.min(
-        canvas.parentElement.clientWidth * 0.95,
-        canvas.parentElement.clientHeight * 0.95
-      );
-      
-      // Set canvas to a constant size
-      canvas.width = maxSize;
-      canvas.height = maxSize;
-      
-      // Calculate cell size based on maze dimensions
-      const cellSize = maxSize / gameState.config.mazeSize;
-      
-      // Set font for emojis
-      ctx.font = `${Math.floor(cellSize * 0.8)}px Arial`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-
-      // Clear canvas
-      ctx.fillStyle = '#000';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Draw maze - all cells visible
-      for (let y = 0; y < gameState.config.mazeSize; y++) {
-        for (let x = 0; x < gameState.config.mazeSize; x++) {
-          const cell = gameState.maze[y][x];
-          ctx.fillStyle = cell === 1 ? '#666' : '#fff';
-          ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
-          
-          // Add subtle grid lines
-          ctx.strokeStyle = '#ddd';
-          ctx.lineWidth = 0.5;
-          ctx.strokeRect(x * cellSize, y * cellSize, cellSize, cellSize);
-        }
+      if (typeof MazeRenderer === 'undefined') {
+        console.error('MazeRenderer not loaded');
+        return;
       }
-
-      // Draw all cookies
-      gameState.cookies.forEach(cookie => {
-        ctx.fillText('🍪',
-          (cookie.x + 0.5) * cellSize,
-          (cookie.y + 0.5) * cellSize
-        );
-      });
-
-      // Draw all trap cookies
-      gameState.trapCookies.forEach(trap => {
-        const now = Date.now();
-        if (now - trap.placedTime < 3000) {
-          ctx.fillText('💥',
-            (trap.x + 0.5) * cellSize,
-            (trap.y + 0.5) * cellSize
-          );
-        } else {
-          ctx.fillText('🍪',
-            (trap.x + 0.5) * cellSize,
-            (trap.y + 0.5) * cellSize
-          );
-        }
-      });
-
-      // Draw all players with their numbers
-      gameState.players.forEach((p, index) => {
-        const playerEmoji = index === 0 ? '😎' : '🤖';
-        const playerNumber = index + 1;
-        
-        // Draw player emoji
-        ctx.fillText(playerEmoji,
-          (p.position.x + 0.5) * cellSize,
-          (p.position.y + 0.5) * cellSize
-        );
-        
-        // Draw player number indicator
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(
-          p.position.x * cellSize,
-          p.position.y * cellSize,
-          20,
-          20
-        );
-        ctx.fillStyle = '#fff';
-        ctx.font = '14px Arial';
-        ctx.fillText(playerNumber,
-          p.position.x * cellSize + 10,
-          p.position.y * cellSize + 10
-        );
-        
-        // Reset font for next emoji
-        ctx.font = `${Math.floor(cellSize * 0.8)}px Arial`;
-      });
+      MazeRenderer.renderGame(canvas, gameState);
     }
 
     // Handle window resize

@@ -105,11 +105,12 @@ class MazeManager {
     }
 
     generateMaze(size) {
-        // Create maze with walls (1) and ensure border is always walls
-        const maze = Array.from({ length: size }, (_, i) => 
-            Array(size).fill(1).map((_, j) => 
-                (i === 0 || i === size-1 || j === 0 || j === size-1) ? 1 : 1
-            )
+        // Add 2 to size to ensure proper borders (1 extra on each side)
+        const adjustedSize = (size % 2 === 0 ? size + 1 : size) + 2;
+        
+        // Initialize maze with walls, including extra border
+        const maze = Array.from({ length: adjustedSize }, (_, i) => 
+            Array(adjustedSize).fill(1)
         );
 
         const directions = [
@@ -119,69 +120,107 @@ class MazeManager {
             { dr: 0, dc: 2 }   // Right
         ];
 
-        const carvePath = (r, c) => {
-            maze[r][c] = 0; // Mark as path
-            
-            // Shuffle directions randomly
-            const shuffledDirections = [...directions]
-                .sort(() => Math.random() - 0.5);
+        // Stack-based iterative implementation for better randomization
+        function carvePath(startR, startC) {
+            const stack = [{r: startR, c: startC}];
+            maze[startR][startC] = 0;
 
-            for (const { dr, dc } of shuffledDirections) {
-                const nr = r + dr, nc = c + dc; // Neighbor cell
-                // Ensure we don't carve into border walls
-                if (nr > 1 && nr < size - 2 && nc > 1 && nc < size - 2 && maze[nr][nc] === 1) {
-                    maze[r + dr/2][c + dc/2] = 0; // Remove wall between cells
-                    carvePath(nr, nc);
-                }
-            }
-        };
+            while (stack.length > 0) {
+                const current = stack[stack.length - 1];
+                const {r, c} = current;
 
-        // Start carving from (1, 1)
-        carvePath(1, 1);
+                // Get all valid neighbors
+                const validNeighbors = directions
+                    .map(({dr, dc}) => ({
+                        r: r + dr,
+                        c: c + dc,
+                        dr,
+                        dc
+                    }))
+                    .filter(({r, c}) => 
+                        r > 1 && r < adjustedSize - 2 && 
+                        c > 1 && c < adjustedSize - 2 && 
+                        maze[r][c] === 1
+                    );
 
-        // Ensure starting positions are clear
-        maze[1][1] = 0; // Player 1 start
-        maze[size-2][size-2] = 0; // Player 2 start
-
-        // Create a winding path between start and end that respects walls
-        let currentRow = 1;
-        let currentCol = 1;
-        const endRow = size - 2;
-        const endCol = size - 2;
-        
-        while (currentRow < endRow || currentCol < endCol) {
-            // Randomly choose whether to move horizontally or vertically when both are possible
-            if (currentRow < endRow && currentCol < endCol) {
-                if (Math.random() < 0.5) {
-                    maze[currentRow + 1][currentCol] = 0;
-                    currentRow++;
+                if (validNeighbors.length > 0) {
+                    // Choose random neighbor
+                    const idx = Math.floor(Math.random() * validNeighbors.length);
+                    const {r: nr, c: nc, dr, dc} = validNeighbors[idx];
+                    
+                    // Carve passage
+                    maze[r + dr/2][c + dc/2] = 0;
+                    maze[nr][nc] = 0;
+                    
+                    // Add to stack
+                    stack.push({r: nr, c: nc});
                 } else {
-                    maze[currentRow][currentCol + 1] = 0;
-                    currentCol++;
+                    // Backtrack
+                    stack.pop();
                 }
-            } else if (currentRow < endRow) {
-                maze[currentRow + 1][currentCol] = 0;
-                currentRow++;
-            } else if (currentCol < endCol) {
-                maze[currentRow][currentCol + 1] = 0;
-                currentCol++;
             }
         }
 
-        // Add a small number of strategic shortcuts without creating large open areas
-        const numShortcuts = Math.floor(size / 6); // Reduced number of shortcuts
-        for (let i = 0; i < numShortcuts; i++) {
-            const r = Math.floor(Math.random() * (size - 4)) + 2;
-            const c = Math.floor(Math.random() * (size - 4)) + 2;
+        // Start from multiple points to create a more complex maze
+        const numStartPoints = Math.floor((adjustedSize - 2) / 10) + 2;
+        for (let i = 0; i < numStartPoints; i++) {
+            const startR = 2 + 2 * Math.floor(Math.random() * ((adjustedSize - 5) / 2));
+            const startC = 2 + 2 * Math.floor(Math.random() * ((adjustedSize - 5) / 2));
+            if (maze[startR][startC] === 1) {
+                carvePath(startR, startC);
+            }
+        }
+
+        // Ensure start and end positions are accessible and have proper space
+        // Player 1 start (top-left)
+        maze[2][2] = 0;
+        // Player 2 end (bottom-right)
+        maze[adjustedSize-3][adjustedSize-3] = 0;
+
+        // Connect disconnected regions
+        for (let r = 2; r < adjustedSize - 2; r += 2) {
+            for (let c = 2; c < adjustedSize - 2; c += 2) {
+                if (maze[r][c] === 1) {
+                    // If we find an isolated wall, connect it to a neighboring path
+                    const neighbors = [
+                        {r: r-1, c}, {r: r+1, c},
+                        {r, c: c-1}, {r, c: c+1}
+                    ].filter(({r, c}) => 
+                        r > 1 && r < adjustedSize - 2 && 
+                        c > 1 && c < adjustedSize - 2 && 
+                        maze[r][c] === 0
+                    );
+
+                    if (neighbors.length > 0) {
+                        const {r: nr, c: nc} = neighbors[Math.floor(Math.random() * neighbors.length)];
+                        maze[r][c] = 0;
+                        maze[(r + nr) / 2][(c + nc) / 2] = 0;
+                    }
+                }
+            }
+        }
+
+        // Add a few strategic loops to make navigation more interesting
+        const numLoops = Math.floor((adjustedSize - 2) / 12);
+        for (let i = 0; i < numLoops; i++) {
+            const r = 2 + 2 * Math.floor(Math.random() * ((adjustedSize - 5) / 2));
+            const c = 2 + 2 * Math.floor(Math.random() * ((adjustedSize - 5) / 2));
             
-            // Only create a shortcut if surrounded by walls to prevent large open areas
-            if (maze[r-1][c-1] === 1 && maze[r-1][c+1] === 1 && 
-                maze[r+1][c-1] === 1 && maze[r+1][c+1] === 1) {
-                maze[r][c] = 0;
+            if (maze[r][c] === 1) {
+                const wallCount = [
+                    maze[r-1][c], maze[r+1][c],
+                    maze[r][c-1], maze[r][c+1]
+                ].filter(cell => cell === 1).length;
+                
+                // Only create a loop if it won't create a large open area
+                if (wallCount >= 3) {
+                    maze[r][c] = 0;
+                }
             }
         }
 
-        return maze;
+        // Return maze without the extra border cells
+        return maze.slice(1, -1).map(row => row.slice(1, -1));
     }
 
     generateInitialCookies(game) {
@@ -208,7 +247,7 @@ class MazeManager {
         const isFirstPlayer = game.players.length === 0;
         const position = isFirstPlayer ? 
             { x: 1, y: 1 } : // Player 1 starts top-left
-            { x: game.config.mazeSize - 2, y: game.config.mazeSize - 2 }; // Player 2 starts bottom-right
+            { x: game.config.mazeSize - 1, y: game.config.mazeSize - 1 }; // Player 2 starts bottom-right
 
         const player = {
             id: playerId,
