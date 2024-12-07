@@ -17,6 +17,25 @@
       flex-direction: column;
     }
 
+    .canvas-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      min-height: 80vh;
+      margin: 10px;
+    }
+
+    #maze-container {
+      max-width: 95%;
+      max-height: 95%;
+      aspect-ratio: 1;
+    }
+
     .instructions-panel {
       width: 300px;
       padding: 25px;
@@ -102,8 +121,8 @@
           </div>
         </div>
 
-        <div class="game-container">
-          <canvas id="gameCanvas"></canvas>
+        <div class="canvas-container">
+          <canvas id="maze-container"></canvas>
         </div>
 
         <div class="game-controls">
@@ -148,7 +167,7 @@
     
     // Game state
     let gameState = null;
-    let canvas = document.getElementById('gameCanvas');
+    let canvas = document.getElementById('maze-container');
     let ctx = canvas.getContext('2d');
     let playerId = null;
     
@@ -258,12 +277,23 @@
     }
 
     function renderGame(state, player) {
-      const cellSize = 30;
-      const viewRadius = state.config.viewRadius;
+      const canvas = document.getElementById('maze-container');
+      if (!canvas || !state) return;
+
+      const ctx = canvas.getContext('2d');
       
-      // Set canvas size
-      canvas.width = state.config.mazeSize * cellSize;
-      canvas.height = state.config.mazeSize * cellSize;
+      // Calculate the maximum possible canvas size while maintaining aspect ratio
+      const maxSize = Math.min(
+        canvas.parentElement.clientWidth * 0.95,
+        canvas.parentElement.clientHeight * 0.95
+      );
+      
+      // Set canvas to a constant size
+      canvas.width = maxSize;
+      canvas.height = maxSize;
+      
+      // Calculate cell size based on maze dimensions
+      const cellSize = maxSize / state.config.mazeSize;
       
       // Set font for emojis
       ctx.font = `${Math.floor(cellSize * 0.8)}px Arial`;
@@ -276,8 +306,8 @@
 
       // Calculate visible area
       const visibleCells = new Set();
-      for (let dy = -viewRadius; dy <= viewRadius; dy++) {
-        for (let dx = -viewRadius; dx <= viewRadius; dx++) {
+      for (let dy = -state.config.viewRadius; dy <= state.config.viewRadius; dy++) {
+        for (let dx = -state.config.viewRadius; dx <= state.config.viewRadius; dx++) {
           const x = player.position.x + dx;
           const y = player.position.y + dy;
           if (x >= 0 && x < state.config.mazeSize && 

@@ -37,11 +37,14 @@
       border-radius: 12px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       overflow: hidden;
+      min-height: 80vh;
+      margin: 10px;
     }
 
     #maze-container {
-      max-width: 100%;
-      max-height: 100%;
+      max-width: 95%;
+      max-height: 95%;
+      aspect-ratio: 1;
     }
 
     .player-stats {
@@ -299,14 +302,19 @@
       if (!gameState) return;
 
       const ctx = canvas.getContext('2d');
-      const cellSize = Math.min(
-        (canvas.parentElement.clientWidth - 40) / gameState.config.mazeSize,
-        (canvas.parentElement.clientHeight - 40) / gameState.config.mazeSize
+      
+      // Calculate the maximum possible canvas size while maintaining aspect ratio
+      const maxSize = Math.min(
+        canvas.parentElement.clientWidth * 0.95,
+        canvas.parentElement.clientHeight * 0.95
       );
       
-      // Set canvas size
-      canvas.width = gameState.config.mazeSize * cellSize;
-      canvas.height = gameState.config.mazeSize * cellSize;
+      // Set canvas to a constant size
+      canvas.width = maxSize;
+      canvas.height = maxSize;
+      
+      // Calculate cell size based on maze dimensions
+      const cellSize = maxSize / gameState.config.mazeSize;
       
       // Set font for emojis
       ctx.font = `${Math.floor(cellSize * 0.8)}px Arial`;
