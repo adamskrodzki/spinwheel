@@ -18,7 +18,7 @@ function setupMazeRoutes(app, mazeManager) {
   app.post('/maze/create', createGameLimiter, (req, res) => {
     const config = {
         cookiesToWin: parseInt(req.body.cookiesToWin) || 10,
-        trapCooldown: parseInt(req.body.trapCooldown) || 10,
+        trapCooldown: parseInt(req.body.trapCooldown) || 10000,
         activeCookies: parseInt(req.body.activeCookies) || 5,
         mazeSize: parseInt(req.body.mazeSize) || 15,
         lives: parseInt(req.body.lives) || 3,

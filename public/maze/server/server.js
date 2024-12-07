@@ -8,7 +8,7 @@ class MazeManager {
         this.games = this.loadGames();
         this.defaultConfig = {
             cookiesToWin: 10,
-            trapCooldown: 10,
+            trapCooldown: 10000,
             activeCookies: 5,
             mazeSize: 15,
             lives: 3,
@@ -290,7 +290,7 @@ class MazeManager {
         if (!player) return false;
 
         const now = Date.now();
-        if (now - player.lastTrapTime < game.config.trapCooldown * 1000) {
+        if (now - player.lastTrapTime < game.config.trapCooldown) {
             return false;
         }
 

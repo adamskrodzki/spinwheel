@@ -42,6 +42,7 @@
       e.preventDefault();
       const formData = new FormData(e.target);
       const data = Object.fromEntries(formData.entries());
+      data.trapCooldown = parseInt(data.trapCooldown)*1000;
       
       try {
         const response = await fetch('/maze/create', {

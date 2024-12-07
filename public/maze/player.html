@@ -149,13 +149,15 @@
       
       // Update cooldown progress bar
       const cooldownProgress = document.getElementById('trapCooldown');
-      if (player.trapCooldown > 0) {
+      console.log(`trapCooldown: ${state.config.trapCooldown}, lastTrapTime: ${player.lastTrapTime}`);
+
+      if (state.config.trapCooldown > 0) {
         let now = Date.now();
-        let remaining = player.trapCooldown - (now - player.lastTrapTime);
+        let remaining = state.config.trapCooldown - (now - player.lastTrapTime);
         if (remaining < 0) {
           remaining = 0;
         }
-        const progress = remaining / player.trapCooldown * 100;
+        const progress = 100 - remaining / state.config.trapCooldown * 100;
         cooldownProgress.style.width = progress + '%';
       } else {
         cooldownProgress.style.width = '100%';
