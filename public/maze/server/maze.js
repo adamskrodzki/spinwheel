@@ -52,7 +52,7 @@ class MazeManager {
         try {
             // Convert Map to object for JSON serialization
             const gamesObj = Object.fromEntries(this.games);
-            const data = JSON.stringify(gamesObj);
+            const data = JSON.stringify(gamesObj, null, 2);
             this.fs.writeFileSync(this.gamesFilePath, data);
         } catch (err) {
             console.error('Error saving maze games:', err);

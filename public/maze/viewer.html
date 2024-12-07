@@ -64,11 +64,14 @@
       padding: 15px 0;
       background: rgba(255, 255, 255, 0.95);
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
       z-index: 100;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      border-radius: 12px;
+      width: auto;
+      display: none; /* Hidden by default */
     }
 
     .join-button {
@@ -194,10 +197,23 @@
     });
 
     function updateUI() {
-      if (!gameState) return;
+      const gameStatus = document.getElementById('game-status');
+      const joinSection = document.querySelector('.join-section');
+      
+      if (!gameState) {
+        gameStatus.textContent = 'Waiting for players...';
+        return;
+      }
+
+      // Show/hide join section based on player count
+      if (gameState.players.length < 2) {
+        joinSection.style.display = 'block';
+      } else {
+        joinSection.style.display = 'none';
+      }
 
       // Update game status and time
-      document.getElementById('game-status').textContent = 
+      gameStatus.textContent = 
         gameState.state === 'waiting' ? 'Waiting for players...' :
         gameState.state === 'playing' ? 'Game in Progress' :
         'Game Over';
