@@ -291,7 +291,7 @@
       
       // Find winner based on score or lives
       const winner = gameState.players.reduce((prev, curr) => {
-        if (!prev || curr.score > prev.score) return curr;
+        if (!prev || (curr.score > prev.score && curr.lives > 0)) return curr;
         if (curr.score === prev.score && curr.lives > prev.lives) return curr;
         return prev;
       }, null);
