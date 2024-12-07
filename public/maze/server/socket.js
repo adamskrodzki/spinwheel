@@ -1,6 +1,38 @@
 function setupMazeSocketHandlers(io, mazeManager) {
     const mazeNamespace = io.of('/maze');
-    const connectedClients = new Map(); // Store client roles and game IDs
+    const connectedClients = new Set(); // Store client roles and game IDs
+    const disconnectTimers = new Map();
+    const gameIntervals = new Map(); // Store game-specific intervals
+    const playerSockets = new Map(); // Track socket instances per player
+
+    function cleanupGame(gameId) {
+        // Clear all disconnect timers for the game's players
+        const game = mazeManager.getGame(gameId);
+        if (game) {
+            game.players.forEach(player => {
+                if (disconnectTimers.has(player.id)) {
+                    clearTimeout(disconnectTimers.get(player.id));
+                    disconnectTimers.delete(player.id);
+                }
+                // Clean up player socket listeners
+                const socket = playerSockets.get(player.id);
+                if (socket) {
+                    socket.removeAllListeners('move');
+                    socket.removeAllListeners('place_trap');
+                    socket.removeAllListeners('collectCookie');
+                    socket.removeAllListeners('playAgain');
+                    playerSockets.delete(player.id);
+                }
+            });
+        }
+
+        // Clear game-specific intervals
+        if (gameIntervals.has(gameId)) {
+            const intervals = gameIntervals.get(gameId);
+            intervals.forEach(interval => clearInterval(interval));
+            gameIntervals.delete(gameId);
+        }
+    }
 
     mazeNamespace.on('connection', (socket) => {
         let currentGame = null;
@@ -19,11 +51,13 @@ function setupMazeSocketHandlers(io, mazeManager) {
             mazeNamespace.to(`game:${game.id}`).emit('game_state', game);
         }
 
-        setInterval(() => {
+        const gameInterval = setInterval(() => {
             if (currentGame) {
                 broadcastGameState(currentGame);
             }
         }, 100);
+
+        gameIntervals.set(socket.id, [gameInterval]);
 
         socket.on('join_game', ({ gameId, role: requestedRole }) => {
             console.log(`Socket ${socket.id} joining game ${gameId} as ${requestedRole}`);
@@ -84,6 +118,11 @@ function setupMazeSocketHandlers(io, mazeManager) {
                 // Viewer
                 broadcastGameState(game);
             }
+
+            // Store socket instance for cleanup
+            if (requestedRole === 'player') {
+                playerSockets.set(socket.id, socket);
+            }
         });
 
         socket.on('move', ({ direction }) => {
@@ -132,8 +171,13 @@ function setupMazeSocketHandlers(io, mazeManager) {
                     // Store the disconnect time
                     player.disconnectTime = Date.now();
                     
+                    // Clear any existing timer for this player
+                    if (disconnectTimers.has(playerId)) {
+                        clearTimeout(disconnectTimers.get(playerId));
+                    }
+                    
                     // Give a 30-second grace period for reconnection
-                    setTimeout(() => {
+                    const disconnectTimer = setTimeout(() => {
                         const game = mazeManager.getGame(currentGame.id);
                         if (game) {
                             const player = game.players.find(p => p.id === playerId);
@@ -141,25 +185,87 @@ function setupMazeSocketHandlers(io, mazeManager) {
                                 // If player hasn't reconnected within grace period
                                 if (Date.now() - player.disconnectTime >= 30000) {
                                     console.log(`Player ${playerId} removed from game ${game.id} after disconnect timeout`);
-                                    // Remove the player
-                                    game.players = game.players.filter(p => p.id !== playerId);
-                                    // If game was in progress, end it
+                                    
+                                    // If game was in progress, declare other player as winner
                                     if (game.state === 'playing') {
                                         game.state = 'finished';
+                                        const remainingPlayer = game.players.find(p => p.id !== playerId);
+                                        if (remainingPlayer) {
+                                            game.winner = remainingPlayer.id;
+                                            game.winReason = 'opponent_disconnected';
+                                        }
                                     }
+                                    
+                                    // Remove the player and clean up
+                                    game.players = game.players.filter(p => p.id !== playerId);
+                                    disconnectTimers.delete(playerId);
+                                    playerSockets.delete(playerId);
+                                    
+                                    // If this was the last player, clean up the entire game
+                                    if (game.players.length === 0) {
+                                        cleanupGame(game.id);
+                                    }
+                                    
                                     broadcastGameState(game);
                                 }
                             }
                         }
                     }, 30000);
                     
-                    broadcastGameState(currentGame);
+                    // Store the timer reference in our separate map
+                    disconnectTimers.set(playerId, disconnectTimer);
                 }
             }
             
-            // Clean up connection tracking
             if (socket.handshake.address) {
                 connectedClients.delete(socket.handshake.address);
+            }
+
+            // Clean up game interval
+            const intervals = gameIntervals.get(socket.id);
+            if (intervals) {
+                intervals.forEach(interval => clearInterval(interval));
+                gameIntervals.delete(socket.id);
+            }
+        });
+
+        socket.on('playAgain', () => {
+            if (!currentGame) return;
+            
+            // Clean up all game-related resources
+            cleanupGame(currentGame.id);
+
+            // Reset game state
+            currentGame.state = 'waiting';
+            currentGame.winner = null;
+            currentGame.winReason = null;
+            currentGame.players.forEach(player => {
+                player.score = 0;
+                player.lives = currentGame.config.lives;
+                player.position = null;
+                player.trapped = false;
+                player.trapTime = null;
+                delete player.disconnectTime;
+                
+                // Re-register socket for the new game
+                const playerSocket = playerSockets.get(player.id);
+                if (playerSocket) {
+                    playerSockets.set(player.id, playerSocket);
+                }
+            });
+
+            // Reset maze and cookies
+            currentGame.maze = mazeManager.generateMaze(currentGame.config.mazeSize);
+            currentGame.cookies = mazeManager.generateCookies(currentGame.maze, currentGame.config.activeCookies);
+            currentGame.startTime = null;
+
+            broadcastGameState(currentGame);
+        });
+
+        // Clean up when game ends normally
+        socket.on('gameEnd', () => {
+            if (currentGame) {
+                cleanupGame(currentGame.id);
             }
         });
     });
