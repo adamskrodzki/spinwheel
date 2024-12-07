@@ -3,48 +3,139 @@
 <head>
   <title>Cookie Heist Maze - Player View</title>
   <link rel="stylesheet" href="../styles.css">
+  <style>
+    .container {
+      display: flex;
+      height: 90vh;
+      padding: 20px;
+      gap: 20px;
+    }
+
+    .game-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .instructions-panel {
+      width: 300px;
+      padding: 25px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .instructions-panel h2 {
+      color: #2c3e50;
+      margin-bottom: 20px;
+      font-size: 1.5em;
+      text-align: center;
+    }
+
+    .instruction-item {
+      display: flex;
+      align-items: center;
+      margin: 15px 0;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      transition: transform 0.2s;
+    }
+
+    .instruction-item:hover {
+      transform: translateX(5px);
+    }
+
+    .instruction-item .icon {
+      font-size: 1.5em;
+      margin-right: 15px;
+      min-width: 30px;
+      text-align: center;
+    }
+
+    .instruction-item .text {
+      color: #34495e;
+      font-size: 1.1em;
+    }
+
+    .game-tip {
+      margin-top: 30px;
+      padding: 15px;
+      background: #e8f5e9;
+      border-radius: 8px;
+      color: #2e7d32;
+      font-size: 0.9em;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
-    <!-- Waiting Screen -->
-    <div id="waitingScreen">
-      <h1>Cookie Heist Maze</h1>
-      <div class="waiting-message">
-        <h2>Waiting for other player to join...</h2>
-        <div class="spinner"></div>
+    <div class="game-content">
+      <!-- Waiting Screen -->
+      <div id="waitingScreen">
+        <h1>Cookie Heist Maze</h1>
+        <div class="waiting-message">
+          <h2>Waiting for other player to join...</h2>
+          <div class="spinner"></div>
+        </div>
       </div>
-    </div>
 
-    <!-- Game Screen (hidden initially) -->
-    <div id="gameScreen" style="display: none;">
-      <div class="game-header">
-        <div class="player-stats">
-          <div class="stat-item">
-            <span>❤️ Lives:</span>
-            <span class="stat-value" id="playerLives">3</span>
-          </div>
-          <div class="stat-item">
-            <span>🍪 Score:</span>
-            <span class="stat-value" id="playerScore">0</span>
-          </div>
-          <div class="stat-item">
-            <span>⚡ Trap:</span>
-            <div class="cooldown-container">
-              <div class="cooldown-progress" id="trapCooldown" style="width: 100%"></div>
+      <!-- Game Screen (hidden initially) -->
+      <div id="gameScreen" style="display: none;">
+        <div class="game-header">
+          <div class="player-stats">
+            <div class="stat-item">
+              <span>❤️ Lives:</span>
+              <span class="stat-value" id="playerLives">3</span>
+            </div>
+            <div class="stat-item">
+              <span>🍪 Score:</span>
+              <span class="stat-value" id="playerScore">0</span>
+            </div>
+            <div class="stat-item">
+              <span>⚡ Trap:</span>
+              <div class="cooldown-container">
+                <div class="cooldown-progress" id="trapCooldown" style="width: 100%"></div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="game-container">
-        <canvas id="gameCanvas"></canvas>
-      </div>
-
-      <div class="game-controls">
-        <div class="controls-info">
-          <p>Move: Arrow Keys or WASD</p>
-          <p>Place Trap: Space Bar</p>
+        <div class="game-container">
+          <canvas id="gameCanvas"></canvas>
         </div>
+
+        <div class="game-controls">
+        </div>
+      </div>
+    </div>
+
+    <!-- Instructions Panel -->
+    <div class="instructions-panel">
+      <h2>How to Play</h2>
+      <div class="instruction-item">
+        <span class="icon">⌨️</span>
+        <span class="text">Move using WASD or Arrow Keys</span>
+      </div>
+      <div class="instruction-item">
+        <span class="icon">💫</span>
+        <span class="text">Press Space to place a trap</span>
+      </div>
+      <div class="instruction-item">
+        <span class="icon">🍪</span>
+        <span class="text">Collect cookies to score points</span>
+      </div>
+      <div class="instruction-item">
+        <span class="icon">❤️</span>
+        <span class="text">Avoid traps to keep your lives</span>
+      </div>
+      <div class="instruction-item">
+        <span class="icon">🏆</span>
+        <span class="text">Player with most cookies wins!</span>
+      </div>
+      <div class="game-tip">
+        Pro Tip: Use traps strategically to block your opponent's path!
       </div>
     </div>
   </div>

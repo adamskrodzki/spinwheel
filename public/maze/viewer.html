@@ -6,7 +6,7 @@
   <style>
     .game-layout {
       display: flex;
-      height: 100vh;
+      height: 90vh;
       padding: 20px;
       gap: 20px;
     }
@@ -24,6 +24,8 @@
       background: rgba(255, 255, 255, 0.95);
       border-radius: 12px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
     }
 
     .canvas-container {
@@ -53,10 +55,7 @@
     }
 
     .controls-info {
-      margin-top: 20px;
-      padding: 15px;
-      background: #f8f9fa;
-      border-radius: 8px;
+      display: none;
     }
 
     .join-section {
@@ -101,7 +100,7 @@
     .game-over {
       text-align: center;
       padding: 30px;
-      background: rgba(255, 255, 255, 0.98);
+      background: rgba(0, 0, 0, 0.60);
       position: fixed;
       top: 50%;
       left: 50%;
@@ -194,15 +193,6 @@
           <span class="stat-value" id="total-traps">0</span>
         </div>
       </div>
-
-      <!-- Controls Info -->
-      <div class="controls-info">
-        <h3>How to Play</h3>
-        <p>🎮 Player 1: WASD Keys</p>
-        <p>🎮 Player 2: Arrow Keys</p>
-        <p>💥 Space: Place Trap</p>
-        <p>🏆 Goal: Collect the most cookies!</p>
-      </div>
     </div>
   </div>
 
@@ -246,18 +236,19 @@
         return;
       }
 
-      // Show/hide join section based on player count
-      if (gameState.players.length < 2) {
-        joinSection.style.display = 'block';
-      } else {
-        joinSection.style.display = 'none';
-      }
 
       // Update game status and time
       gameStatus.textContent = 
         gameState.state === 'waiting' ? 'Waiting for players...' :
         gameState.state === 'playing' ? 'Game in Progress' :
         'Game Over';
+
+      // Show/hide join section based on player count
+      if (gameState.players.length < 2 && gameState.state === 'waiting') {
+        joinSection.style.display = 'block';
+      } else {
+        joinSection.style.display = 'none';
+      }
 
       // Update player stats
       gameState.players.forEach((player, index) => {
