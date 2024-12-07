@@ -229,6 +229,7 @@
 
     function updateUI() {
       const gameStatus = document.getElementById('game-status');
+      const gameOverElements = document.getElementsByClassName('game-over');
       const joinSection = document.querySelector('.join-section');
       const gameInfo = document.querySelector('.game-info');
       
@@ -236,6 +237,10 @@
         gameStatus.textContent = 'Waiting for players...';
         joinSection.style.display = 'block';
         gameInfo.style.display = 'none';
+        // Remove any existing game over screens
+        while (gameOverElements.length > 0) {
+          gameOverElements[0].remove();
+        }
         return;
       }
 
@@ -250,12 +255,20 @@
           gameStatus.textContent = 'Waiting for players...';
           joinSection.style.display = gameState.players.length < 2 ? 'block' : 'none';
           gameInfo.style.display = 'none';
+          // Remove any existing game over screens
+          while (gameOverElements.length > 0) {
+            gameOverElements[0].remove();
+          }
           break;
 
         case 'playing':
           gameStatus.textContent = 'Game in Progress';
           joinSection.style.display = 'none';
           gameInfo.style.display = 'block';
+          // Remove any existing game over screens
+          while (gameOverElements.length > 0) {
+            gameOverElements[0].remove();
+          }
 
           // Update game stats
           const totalCookies = gameState.players.reduce((sum, p) => sum + p.score, 0);
