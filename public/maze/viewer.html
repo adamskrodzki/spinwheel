@@ -58,15 +58,50 @@
       background: #f8f9fa;
       border-radius: 8px;
     }
-  </style>
-</head>
-<body>
-  <!-- Game Layout -->
-  <div class="game-layout">
-    <div class="game-area">
-      <div class="game-header">
+
+    .join-section {
+      text-align: center;
+      padding: 15px 0;
+      background: rgba(255, 255, 255, 0.95);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .join-button {
+      display: inline-block;
+      padding: 15px 40px;
+      font-size: 24px;
+      font-weight: bold;
+      text-decoration: none;
+      color: white;
+      background-color: #4CAF50;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      gap: 20px;
+     }
+
+     .join-button:hover {
+       background-color: #45a049;
+       transform: translateY(-2px);
+       box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+     }
+   </style>
+ </head>
+ <body>
+   <!-- Game Layout -->
+   <div class="game-layout">
+     <div class="game-area">
+       <div class="game-header">
         <h1>Cookie Heist Maze</h1>
         <div id="game-status">Waiting for players...</div>
+        <div id="join-section" class="join-section">
+          <a href="#" id="join-button" class="join-button">Join Game</a>
+        </div>
       </div>
       <div class="canvas-container">
         <canvas id="maze-container"></canvas>
@@ -150,6 +185,12 @@
       }
       
       updateUI();
+    });
+
+    document.getElementById('join-button').addEventListener('click', (e) => {
+      e.preventDefault();
+      const playerUrl = `/maze/player/${gameId}`;
+      window.open(playerUrl, '_blank');
     });
 
     function updateUI() {
