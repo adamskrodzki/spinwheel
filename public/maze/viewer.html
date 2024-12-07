@@ -224,55 +224,62 @@
     document.getElementById('join-button').addEventListener('click', (e) => {
       e.preventDefault();
       const playerUrl = `/maze/player/${gameId}`;
-      window.open(playerUrl, '_blank');
+      window.location.href = playerUrl;
     });
 
     function updateUI() {
       const gameStatus = document.getElementById('game-status');
       const joinSection = document.querySelector('.join-section');
+      const gameInfo = document.querySelector('.game-info');
       
       if (!gameState) {
         gameStatus.textContent = 'Waiting for players...';
+        joinSection.style.display = 'block';
+        gameInfo.style.display = 'none';
         return;
       }
 
-
-      // Update game status and time
-      gameStatus.textContent = 
-        gameState.state === 'waiting' ? 'Waiting for players...' :
-        gameState.state === 'playing' ? 'Game in Progress' :
-        'Game Over';
-
-      // Show/hide join section based on player count
-      if (gameState.players.length < 2 && gameState.state === 'waiting') {
-        joinSection.style.display = 'block';
-      } else {
-        joinSection.style.display = 'none';
-      }
-
-      // Update player stats
+      // Update player stats regardless of state
       gameState.players.forEach((player, index) => {
         document.getElementById(`p${index + 1}-score`).textContent = player.score;
         document.getElementById(`p${index + 1}-lives`).textContent = player.lives;
       });
 
-      // Update game stats
-      if (gameState.state === 'playing') {
-        const totalCookies = gameState.players.reduce((sum, p) => sum + p.score, 0);
-        const totalTraps = gameState.players.reduce((sum, p) => sum + (p.trapsPlaced || 0), 0);
-        document.getElementById('total-cookies').textContent = totalCookies;
-        document.getElementById('total-traps').textContent = totalTraps;
-        
-        // Update game time
-        const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
-        const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
-        const seconds = (elapsed % 60).toString().padStart(2, '0');
-        document.getElementById('game-time').textContent = `${minutes}:${seconds}`;
-      }
+      switch (gameState.state) {
+        case 'waiting':
+          gameStatus.textContent = 'Waiting for players...';
+          joinSection.style.display = gameState.players.length < 2 ? 'block' : 'none';
+          gameInfo.style.display = 'none';
+          break;
 
-      // Update game display
-      const canvas = document.getElementById('maze-container');
-      drawGame(canvas);
+        case 'playing':
+          gameStatus.textContent = 'Game in Progress';
+          joinSection.style.display = 'none';
+          gameInfo.style.display = 'block';
+
+          // Update game stats
+          const totalCookies = gameState.players.reduce((sum, p) => sum + p.score, 0);
+          const totalTraps = gameState.players.reduce((sum, p) => sum + (p.trapsPlaced || 0), 0);
+          document.getElementById('total-cookies').textContent = totalCookies;
+          document.getElementById('total-traps').textContent = totalTraps;
+          
+          // Update game time
+          const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+          const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+          const seconds = (elapsed % 60).toString().padStart(2, '0');
+          document.getElementById('game-time').textContent = `${minutes}:${seconds}`;
+          break;
+
+        case 'finished':
+          gameStatus.textContent = 'Game Over';
+          joinSection.style.display = 'none';
+          gameInfo.style.display = 'block';
+          break;
+
+        default:
+          console.warn('Unknown game state:', gameState.state);
+          break;
+      }
     }
 
     function drawGame(canvas) {
