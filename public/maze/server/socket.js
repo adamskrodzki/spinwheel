@@ -19,6 +19,12 @@ function setupMazeSocketHandlers(io, mazeManager) {
             mazeNamespace.to(`game:${game.id}`).emit('game_state', game);
         }
 
+        setInterval(() => {
+            if (currentGame) {
+                broadcastGameState(currentGame);
+            }
+        }, 100);
+
         socket.on('join_game', ({ gameId, role: requestedRole }) => {
             console.log(`Socket ${socket.id} joining game ${gameId} as ${requestedRole}`);
             const game = mazeManager.getGame(gameId);
