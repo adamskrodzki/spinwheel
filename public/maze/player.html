@@ -71,6 +71,36 @@
       min-width: 30px;
       text-align: center;
     }
+
+    .name-input-container {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .name-input-container input {
+      padding: 10px;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px;
+      width: 200px;
+    }
+
+    .name-input-container button {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.2s;
+    }
+
+    .name-input-container button:hover {
+      background-color: #45a049;
+    }
   </style>
 </head>
 <body>
@@ -80,8 +110,12 @@
       <div id="waitingScreen">
         <h1>Cookie Heist Maze</h1>
         <div class="waiting-message">
-          <h2>Waiting for other player to join...</h2>
-          <div class="spinner"></div>
+          <div class="name-input-container">
+            <input type="text" id="playerNameInput" placeholder="Enter your name" maxlength="20">
+            <button id="joinGameBtn">Join Game</button>
+          </div>
+          <h2 style="display: none;">Waiting for other player to join...</h2>
+          <div class="spinner" style="display: none;"></div>
         </div>
       </div>
 
@@ -89,6 +123,9 @@
       <div id="gameScreen" style="display: none;">
         <div class="game-header">
           <div class="player-stats">
+            <div class="stat-item">
+              <span id="playerName"></span>
+            </div>
             <div class="stat-item">
               <span>❤️ Lives:</span>
               <span class="stat-value" id="playerLives">3</span>
@@ -157,17 +194,29 @@
     let ctx = canvas.getContext('2d');
     let playerId = null;
     
-    // Join game
-    socket.emit('join_game', { 
-      gameId,
-      role: 'player'
+    // Join game handler
+    document.getElementById('joinGameBtn').addEventListener('click', () => {
+      const nameInput = document.getElementById('playerNameInput');
+      const name = nameInput.value.trim() || (gameState?.players?.length === 0 ? "Player 1" : "Player 2");
+      
+      // Hide input, show waiting message
+      nameInput.parentElement.style.display = 'none';
+      document.querySelector('.waiting-message h2').style.display = 'block';
+      document.querySelector('.spinner').style.display = 'block';
+      
+      // Join game with player name
+      socket.emit('join_game', { 
+        gameId,
+        role: 'player',
+        name: name
+      });
     });
 
     // Listen for player assignment
     socket.on('player_assigned', (data) => {
       playerId = data.playerId;
-      if (data.playerNumber) {
-        document.querySelector('.waiting-message h2').textContent = `You are Player ${data.playerNumber}`;
+      if (data.name) {
+        document.querySelector('.waiting-message h2').textContent = `You are ${data.name}`;
       }
     });
 
@@ -240,6 +289,7 @@
       
       if (!player) return;
 
+      document.getElementById('playerName').textContent = player.name;
       document.getElementById('playerLives').textContent = player.lives;
       document.getElementById('playerScore').textContent = player.score;
       

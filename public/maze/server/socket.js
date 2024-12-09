@@ -69,17 +69,17 @@ function setupMazeSocketHandlers(io, mazeManager) {
 
         gameIntervals.set(socket.id, [gameInterval]);
 
-        socket.on('join_game', ({ gameId, role: requestedRole }) => {
-            console.log(`Socket ${socket.id} joining game ${gameId} as ${requestedRole}`);
-            const game = mazeManager.getGame(gameId);
+        socket.on('join_game', (data) => {
+            console.log(`Socket ${socket.id} joining game ${data.gameId} as ${data.role}`);
+            const game = mazeManager.getGame(data.gameId);
             if (!game) {
                 socket.emit('error', { message: 'Game not found' });
                 return;
             }
 
-            socket.join(`game:${gameId}`);
+            socket.join(`game:${game.id}`);
             currentGame = game;
-            role = requestedRole;
+            role = data.role;
 
             if (role === 'player') {
                 if (game.state === 'finished') {
@@ -92,9 +92,12 @@ function setupMazeSocketHandlers(io, mazeManager) {
                 if (existingPlayer) {
                     // This is a reconnecting player
                     playerId = socket.id;
-                    socket.emit('player_assigned', { playerId });
+                    socket.emit('player_assigned', { 
+                        playerId,
+                        name: existingPlayer.name 
+                    });
                     broadcastGameState(game);
-                    console.log(`Player ${socket.id} reconnected to game ${gameId}. Total players: ${game.players.length}`);
+                    console.log(`Player ${socket.id} reconnected to game ${game.id}. Total players: ${game.players.length}`);
                     return;
                 }
                 
@@ -105,12 +108,12 @@ function setupMazeSocketHandlers(io, mazeManager) {
                 }
 
                 // Add new player
-                const player = mazeManager.addPlayer(gameId, playerId);
+                const player = mazeManager.addPlayer(game.id, playerId, data.name);
                 if (player) {
                     // Notify the player they've been assigned
                     socket.emit('player_assigned', { 
                         playerId: socket.id,
-                        playerNumber: game.players.length 
+                        name: player.name
                     });
                     
                     // If game is now full, start the game
@@ -119,7 +122,7 @@ function setupMazeSocketHandlers(io, mazeManager) {
                         game.startTime = Date.now();
                     }
                     
-                    console.log(`Player ${socket.id} added to game ${gameId}. Total players: ${game.players.length}`);
+                    console.log(`Player ${socket.id} added to game ${game.id}. Total players: ${game.players.length}`);
                     broadcastGameState(game);
                     playerSockets.set(socket.id, socket);
                     broadcastStats();

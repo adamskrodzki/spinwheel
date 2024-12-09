@@ -254,7 +254,7 @@ class MazeManager {
         return cookies;
     }
 
-    addPlayer(gameId, playerId) {
+    addPlayer(gameId, playerId, playerName) {
         const game = this.getGame(gameId);
         if (!game || game.players.length >= 2) return null;
 
@@ -265,6 +265,7 @@ class MazeManager {
 
         const player = {
             id: playerId,
+            name: playerName || (isFirstPlayer ? "Player 1" : "Player 2"),
             position,
             score: 0,
             lives: game.config.lives,
