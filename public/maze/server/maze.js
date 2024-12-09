@@ -30,6 +30,10 @@ class MazeManager {
             const games = new Map();
             for (const [id, game] of Object.entries(gamesObj)) {
                 games.set(id, this.ensureGameMethods(game));
+                const loadedGame = games.get(id);
+                
+                // Regenerate cookies based on game config
+                loadedGame.cookies = this.generateInitialCookies(loadedGame);
             }
             return games;
         } catch (err) {
