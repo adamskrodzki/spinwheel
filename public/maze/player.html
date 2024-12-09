@@ -4,118 +4,70 @@
   <title>Cookie Heist Maze - Player View</title>
   <link rel="stylesheet" href="../styles.css">
   <style>
+    /* Only styles specific to player view that aren't in styles.css */
+    .waiting-message {
+      text-align: center;
+      padding: var(--spacing-lg);
+    }
+
+    .spinner {
+      margin: var(--spacing-md) auto;
+    }
+
+    .game-tip {
+      margin-top: var(--spacing-lg);
+      padding: var(--spacing-md);
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: var(--border-radius);
+      font-style: italic;
+    }
+
+    .game-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background-color: #fff;
+      padding: var(--spacing-md);
+      border-bottom: 1px solid #ddd;
+      z-index: 1;
+    }
+
     .container {
-      display: flex;
-      height: 90vh;
-      padding: 20px;
-      gap: 20px;
+      padding-top: 60px;
     }
 
-    .game-content {
-      flex: 1;
+    .join-section {
       display: flex;
-      flex-direction: column;
-    }
-
-    .canvas-container {
-      flex: 1;
-      display: flex;
-      align-items: center;
       justify-content: center;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-      min-height: 80vh;
-      margin: 10px;
-    }
-
-    #maze-container {
-      max-width: 95%;
-      max-height: 95%;
-      aspect-ratio: 1;
-    }
-
-    .instructions-panel {
-      width: 300px;
-      padding: 25px;
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .instructions-panel h2 {
-      color: #2c3e50;
-      margin-bottom: 20px;
-      font-size: 1.5em;
-      text-align: center;
-    }
-
-    .instruction-item {
-      display: flex;
       align-items: center;
-      margin: 15px 0;
-      padding: 10px;
-      background: #f8f9fa;
-      border-radius: 8px;
-      transition: transform 0.2s;
+      height: 30vh;
     }
 
-    .instruction-item:hover {
-      transform: translateX(5px);
-    }
-
-    .instruction-item .icon {
-      font-size: 1.5em;
-      margin-right: 15px;
-      min-width: 30px;
+    .join-form {
       text-align: center;
-    }
-
-    .name-input-container {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
-
-    .name-input-container input {
-      padding: 10px;
-      border: 2px solid #ddd;
-      border-radius: 6px;
-      font-size: 16px;
-      width: 200px;
-    }
-
-    .name-input-container button {
-      padding: 10px 20px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 16px;
-      transition: background-color 0.2s;
-    }
-
-    .name-input-container button:hover {
-      background-color: #45a049;
     }
   </style>
 </head>
 <body>
+  <!-- Fixed Header -->
+  <div class="game-header">
+    <h1>Cookie Heist Maze</h1>
+    <div id="game-status">Waiting for players...</div>
+  </div>
+
+  <!-- Main Content -->
   <div class="container">
     <div class="game-content">
       <!-- Waiting Screen -->
-      <div id="waitingScreen">
-        <h1>Cookie Heist Maze</h1>
+      <div id="waitingScreen" class="join-section">
         <div class="waiting-message">
-          <div class="name-input-container">
+          <div class="join-form">
             <input type="text" id="playerNameInput" placeholder="Enter your name" maxlength="20">
-            <button id="joinGameBtn">Join Game</button>
+            <button id="joinGameBtn" class="join-button">Join Game</button>
           </div>
-          <h2 style="display: none;">Waiting for other player to join...</h2>
-          <div class="spinner" style="display: none;"></div>
+          <h2>Waiting for other player to join...</h2>
+          <div class="spinner"></div>
         </div>
       </div>
 
@@ -137,7 +89,7 @@
             <div class="stat-item">
               <span>⚡ Trap:</span>
               <div class="cooldown-container">
-                <div class="cooldown-progress" id="trapCooldown" style="width: 100%"></div>
+                <div class="cooldown-progress" id="trapCooldown"></div>
               </div>
             </div>
           </div>
