@@ -97,10 +97,39 @@ const MazeRenderer = {
             const playerNumber = index + 1;
             
             // Draw player emoji
-            ctx.fillText(playerEmoji,
-                (p.position.x + 0.5) * cellSize,
-                (p.position.y + 0.5) * cellSize
-            );
+            ctx.save();
+            const playerX = (p.position.x + 0.5) * cellSize;
+            const playerY = (p.position.y + 0.5) * cellSize;
+
+            // Check if player just collected a trap cookie
+            const now = Date.now();
+            if (p.lastTrapCollect && now - p.lastTrapCollect < 500) {
+                // Add red glow effect
+                const progress = (now - p.lastTrapCollect) / 500;
+                const glowSize = Math.sin(progress * Math.PI) * 20;
+                const glowOpacity = 1 - progress;
+                
+                ctx.shadowColor = 'rgba(255, 0, 0, ' + glowOpacity + ')';
+                ctx.shadowBlur = glowSize;
+                
+                // Create explosion particles
+                if (progress < 0.3) {
+                    for (let i = 0; i < 8; i++) {
+                        const angle = (i / 8) * Math.PI * 2;
+                        const distance = cellSize * (0.5 + progress);
+                        const particleX = playerX + Math.cos(angle) * distance;
+                        const particleY = playerY + Math.sin(angle) * distance;
+                        
+                        ctx.fillStyle = 'rgba(255, 68, 68, ' + (1 - progress) + ')';
+                        ctx.beginPath();
+                        ctx.arc(particleX, particleY, cellSize * 0.1, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+
+            ctx.fillText(playerEmoji, playerX, playerY);
+            ctx.restore();
             
             // Draw player number indicator
             ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';

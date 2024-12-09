@@ -268,7 +268,8 @@ class MazeManager {
             position,
             score: 0,
             lives: game.config.lives,
-            lastTrapTime: 0
+            lastTrapTime: 0,
+            lastTrapCollect: 0 // Add last trap collect timestamp
         };
 
         game.players.push(player);
@@ -348,8 +349,10 @@ class MazeManager {
         );
 
         if (trapIndex !== -1) {
+            const trapCookie = game.trapCookies[trapIndex];
             game.trapCookies.splice(trapIndex, 1);
             player.lives--;
+            player.lastTrapCollect = Date.now(); // Add timestamp for animation
 
             if (player.lives <= 0) {
                 game.state = 'finished';

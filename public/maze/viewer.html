@@ -75,7 +75,6 @@
       width: auto;
       min-width: 300px;
       display: none;
-      animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     }
 
     .join-button {
@@ -93,45 +92,6 @@
       cursor: pointer;
       margin-top: 20px;
     }
-
-    .join-button:hover {
-      background-color: #45a049;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
-    }
-
-    .game-over {
-      text-align: center;
-      padding: 30px;
-      background: rgba(0, 0, 0, 0.60);
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 100;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-      border-radius: 16px;
-      animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    }
-
-    @keyframes bounceIn {
-      0% { 
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.3);
-      }
-      50% {
-        opacity: 0.9;
-        transform: translate(-50%, -50%) scale(1.1);
-      }
-      80% {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(0.89);
-      }
-      100% {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-      }
-    }
   </style>
 </head>
 <body>
@@ -144,7 +104,7 @@
         <div id="join-section" class="join-section">
           <h2>Join the Game!</h2>
           <div class="winner">
-            🎮 Ready to Play? 🎮
+            Ready to Play? 
           </div>
           <a href="#" id="join-button" class="join-button">Join Game</a>
         </div>
@@ -157,25 +117,25 @@
     <div class="game-sidebar">
       <!-- Player Stats -->
       <div class="player-stats">
-        <h3>Player 1 😎</h3>
+        <h3>Player 1 </h3>
         <div class="stat-item">
-          <span>❤️ Lives:</span>
+          <span>Lives:</span>
           <span class="stat-value" id="p1-lives">3</span>
         </div>
         <div class="stat-item">
-          <span>🍪 Score:</span>
+          <span>Score:</span>
           <span class="stat-value" id="p1-score">0</span>
         </div>
       </div>
 
       <div class="player-stats">
-        <h3>Player 2 🤖</h3>
+        <h3>Player 2 </h3>
         <div class="stat-item">
-          <span>❤️ Lives:</span>
+          <span>Lives:</span>
           <span class="stat-value" id="p2-lives">3</span>
         </div>
         <div class="stat-item">
-          <span>🍪 Score:</span>
+          <span>Score:</span>
           <span class="stat-value" id="p2-score">0</span>
         </div>
       </div>
@@ -184,15 +144,15 @@
       <div class="game-info">
         <h3>Game Stats</h3>
         <div class="stat-item">
-          <span>⏱️ Time:</span>
+          <span>Time:</span>
           <span class="stat-value" id="game-time">00:00</span>
         </div>
         <div class="stat-item">
-          <span>🍪 Total Cookies:</span>
+          <span>Total Cookies:</span>
           <span class="stat-value" id="total-cookies">0</span>
         </div>
         <div class="stat-item">
-          <span>💥 Total Traps:</span>
+          <span>Total Traps:</span>
           <span class="stat-value" id="total-traps">0</span>
         </div>
       </div>
@@ -349,14 +309,14 @@
           <div class="final-stats">
             <div class="stat-item winner">
               Player ${winnerIndex + 1} (Winner):<br>
-              Score: ${winner.score} 🍪<br>
-              Lives: ${winner.lives} ❤️
+              Score: ${winner.score} 
+              Lives: ${winner.lives} 
             </div>
             ${gameState.winReason !== 'opponent_disconnected' ? `
               <div class="stat-item">
                 Player ${gameState.players.findIndex(p => p.id !== winner.id) + 1}:<br>
-                Score: ${loser.score} 🍪<br>
-                Lives: ${loser.lives} ❤️
+                Score: ${loser.score} 
+                Lives: ${loser.lives} 
               </div>
             ` : ''}
           </div>
