@@ -64,13 +64,12 @@ class WheelManager {
     }
 
     wheel.isSpinning = true;
-    const spinData = generateSpinParameters(wheel.segments.length);
+    const spinData = generateSpinParameters(wheel.currentAngle, wheel.segments.length);
     this.io.to(wheelId).emit('spin', spinData);
 
     setTimeout(() => {
       wheel.isSpinning = false;
       wheel.currentAngle = (wheel.currentAngle + (spinData.spins * 2 * Math.PI) + (spinData.stopAngle * Math.PI / 180)) % (2 * Math.PI);
-      this.io.to(wheelId).emit('currentAngle', wheel.currentAngle);
       this.io.to(wheelId).emit('spinEnded', spinData);
       this.saveWheels();
     }, spinData.duration * 1000);

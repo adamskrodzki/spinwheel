@@ -74,6 +74,7 @@
         centerX = canvas.width / 2;
         centerY = canvas.height / 2;
         radius = Math.min(centerX, centerY) - 20;
+        console.log(`Drawing wheel on setCanvasSize with currentAngle: ${currentAngle}`);
         drawWheel(currentAngle);
       }
 
@@ -133,6 +134,7 @@
         ctx.restore();
       }
 
+      console.log(`Drawing wheel on initializeWheel with currentAngle: ${currentAngle}`);
       drawWheel(currentAngle);
 
       // Spin functionality
@@ -174,6 +176,7 @@
       // Handle currentAngle updates from the server
       socket.on('currentAngle', (updatedAngle) => {
         currentAngle = updatedAngle;
+        console.log(`Drawing wheel with currentAngle: ${currentAngle}`);
         drawWheel(currentAngle);
       });
 
@@ -191,7 +194,10 @@
           const easedT = easeOut(t);
           currentAngle = easedT * totalAngle;
 
-          drawWheel(currentAngle % (2 * Math.PI));
+          currentAngle = currentAngle % (2 * Math.PI);
+
+          console.log(`Drawing wheel on update with currentAngle: ${currentAngle}`);
+          drawWheel(currentAngle);
 
           if (t < 1) {
             requestAnimationFrame(update);
