@@ -198,7 +198,7 @@ button:hover {
 /* Cooldown Container */
 .cooldown-container {
   position: fixed;
-  bottom: var(--spacing-md);
+  bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
   background: rgba(0, 0, 0, 0.8);
@@ -206,6 +206,7 @@ button:hover {
   padding: 8px 16px;
   border-radius: 20px;
   z-index: 1000;
+  pointer-events: none;
 }
 
 /* Maze-specific Variables */
@@ -720,4 +721,25 @@ canvas {
   margin-bottom: var(--spacing-md);
   font-size: 1.2em;
   text-align: center;
+}
+
+/* Stats and Progress */
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.trap-progress {
+  width: 60px;
+  height: 8px;
+  background: #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.trap-progress-bar {
+  height: 100%;
+  background: #37ec3c;
+  transition: width 0.3s ease;
 }
