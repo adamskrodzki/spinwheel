@@ -6,9 +6,11 @@ const predefinedColors = [
 function generateSpinParameters(numSegments) {
   const spins = Math.floor(Math.random() * 3) + 5;
   const duration = 5;
-  const stopSegment = Math.floor(Math.random() * numSegments) + 1;
+  const stopSegment = Math.floor(Math.random() * numSegments * 10)% numSegments + 1;
   const segmentAngle = 360 / numSegments;
-  const stopAngle = 360 - ((stopSegment - 1) * segmentAngle) + (segmentAngle / 2);
+  const stopAngle = 360 - ((stopSegment - 1) * segmentAngle) - (segmentAngle) + Math.floor(Math.random() * segmentAngle * 0.9);
+
+  console.log(`Spins: ${spins}, Duration: ${duration}, Stop Angle: ${stopAngle}, Stop Segment: ${stopSegment}`);
 
   return { spins, duration, stopAngle, winningSegment: stopSegment };
 }
@@ -64,7 +66,7 @@ class WheelManager {
     }
 
     wheel.isSpinning = true;
-    const spinData = generateSpinParameters(wheel.currentAngle, wheel.segments.length);
+    const spinData = generateSpinParameters(wheel.segments.length);
     this.io.to(wheelId).emit('spin', spinData);
 
     setTimeout(() => {
@@ -86,4 +88,4 @@ class WheelManager {
   }
 }
 
-module.exports = { WheelManager, predefinedColors };
+module.exports = { WheelManager, predefinedColors, generateSpinParameters };
