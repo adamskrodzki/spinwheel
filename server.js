@@ -5,7 +5,7 @@ const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http, {
   cors: {
-    origin: "spinwheel-qwbu.onrender.com",
+    origin: "*",
     methods: ["GET", "POST"]
   }
 });
