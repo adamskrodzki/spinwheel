@@ -110,7 +110,7 @@
           ctx.rotate(startAngle + segmentAngle / 2);
           ctx.textAlign = 'right';
           ctx.fillStyle = '#FFFFFF'; // White text for contrast
-          ctx.font = '1.2em Arial'; // Responsive font
+          ctx.font = '1em Arial'; // Responsive font
           const lines = segments[i].split("|");
           for (let j = 0; j < lines.length; j++) {
             ctx.fillText(lines[j], radius * 0.9, radius * 0.1 + j * radius * 0.1);
