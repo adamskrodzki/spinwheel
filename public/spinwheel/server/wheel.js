@@ -36,7 +36,7 @@ class WheelManager {
 
   saveWheels() {
     try {
-      const data = JSON.stringify(this.wheels);
+      const data = JSON.stringify(this.wheels, null, 2);
       // Ensure directory exists
       const dir = path.dirname(this.wheelsFilePath);
       this.fs.mkdirSync(dir, { recursive: true });
