@@ -1,4 +1,5 @@
 const { v4: uuidv4 } = require('uuid');
+const path = require('path');
 
 class MazeManager {
     constructor(io, gamesFilePath, fs) {
@@ -67,6 +68,9 @@ class MazeManager {
             }
             
             const data = JSON.stringify(gamesObj, null, 2);
+            // Ensure directory exists
+            const dir = path.dirname(this.gamesFilePath);
+            this.fs.mkdirSync(dir, { recursive: true });
             this.fs.writeFileSync(this.gamesFilePath, data);
         } catch (err) {
             console.error('Error saving maze games:', err);

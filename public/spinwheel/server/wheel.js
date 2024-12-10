@@ -1,3 +1,4 @@
+const path = require('path');
 const predefinedColors = [
   '#CC4422', '#22CC44', '#2244CC', '#B39900', '#774488',
   '#CC6600', '#118877', '#993322', '#226699', '#11AA55'
@@ -36,6 +37,9 @@ class WheelManager {
   saveWheels() {
     try {
       const data = JSON.stringify(this.wheels);
+      // Ensure directory exists
+      const dir = path.dirname(this.wheelsFilePath);
+      this.fs.mkdirSync(dir, { recursive: true });
       this.fs.writeFileSync(this.wheelsFilePath, data);
     } catch (err) {
       console.error('Error saving wheel configurations:', err);

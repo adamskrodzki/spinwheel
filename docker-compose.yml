@@ -5,6 +5,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        CACHEBUST: ${CACHEBUST:-$(date +%s)}  # Uses current timestamp as cache buster
     ports:
       - "3000:3000"
     volumes:
