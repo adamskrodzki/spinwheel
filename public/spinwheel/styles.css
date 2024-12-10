@@ -54,11 +54,11 @@ body {
 
   #logo-container {
     position: absolute;
-    top: 50%;
-    left: 50%;
+    top: 5%;
+    left: 5%;
     transform: translate(-50%, -50%);
-    width: 20%; /* Adjust size as needed */
-    height: 20%; /* Adjust size as needed */
+    width: 8%; /* Adjust size as needed */
+    height: 8%; /* Adjust size as needed */
     pointer-events: none; /* This ensures clicks pass through to the wheel */
     z-index: 1;
   }

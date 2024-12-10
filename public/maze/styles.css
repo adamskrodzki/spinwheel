@@ -143,6 +143,8 @@ button:hover {
   gap: var(--spacing-md);
   padding: var(--spacing-md);
   box-sizing: border-box;
+  overflow: hidden;
+  max-height: calc(100vh - var(--header-height));
 }
 
 .game-content {
@@ -157,6 +159,7 @@ button:hover {
   padding: var(--spacing-md);
   height: calc(100vh - var(--header-height) - var(--spacing-md) * 2);
   overflow: hidden;
+  max-height: calc(100vh - var(--header-height) - var(--spacing-md) * 2);
 }
 
 .game-sidebar,
@@ -194,6 +197,7 @@ button:hover {
   align-items: center;
   margin: 0;
   padding: 0;
+  overflow: hidden;
 }
 
 canvas {
@@ -750,4 +754,13 @@ canvas {
   height: 100%;
   background: #37ec3c;
   transition: width 0.3s ease;
+}
+
+/* Global scroll prevention */
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
 }

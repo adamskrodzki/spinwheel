@@ -8,11 +8,11 @@
 </head>
 <body>
   <div class="container">
+    <div id="logo-container">
+      <img src="/assets/logo.png" alt="Logo" id="wheel-logo">
+    </div>
     <div id="canvas-container">
       <canvas id="wheelCanvas"></canvas>
-      <div id="logo-container">
-        <img src="/assets/logo.png" alt="Logo" id="wheel-logo">
-      </div>
     </div>
     <p id="statusMessage" class="error"></p>
     <div id="winner" class="success"></div>
@@ -111,7 +111,10 @@
           ctx.textAlign = 'right';
           ctx.fillStyle = '#FFFFFF'; // White text for contrast
           ctx.font = '1.2em Arial'; // Responsive font
-          ctx.fillText(segments[i], radius * 0.9, 10);
+          const lines = segments[i].split("|");
+          for (let j = 0; j < lines.length; j++) {
+            ctx.fillText(lines[j], radius * 0.9, radius * 0.1 + j * radius * 0.1);
+          }
           ctx.restore();
         }
         ctx.restore();

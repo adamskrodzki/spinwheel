@@ -2,7 +2,7 @@ const socket = io();
 
 function createWheel() {
     const segmentsInput = document.getElementById('segments').value;
-    const segments = segmentsInput.split('\n').filter(segment => segment.trim() !== '');
+    const segments = segmentsInput.split('\n').filter(segment => segment !== '');
 
     if (segments.length < 2) {
         document.getElementById('error').innerText = 'Please enter at least two segments.';
