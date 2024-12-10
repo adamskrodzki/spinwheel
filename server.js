@@ -21,8 +21,8 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'public', 'assets')));
 
-const wheelsFilePath = path.join(__dirname, 'public', 'spinwheel', 'wheels.json');
-const gamesFilePath = path.join(__dirname, 'public', 'maze', 'games.json');
+const wheelsFilePath = path.join(__dirname, 'data', 'spinwheel', 'wheels.json');
+const gamesFilePath = path.join(__dirname, 'data', 'maze', 'games.json');
 
 const wheelManager = new WheelManager(io, wheelsFilePath, fs);
 const mazeManager = new MazeManager(io, gamesFilePath, fs);

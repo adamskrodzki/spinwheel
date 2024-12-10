@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  spinwheel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./my-data:/app/data
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
